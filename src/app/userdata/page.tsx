@@ -1,6 +1,7 @@
 // src/app/userdata/page.tsx
 "use client";
 
+import { supabase } from '../../pages/api/supabaseClient'
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import TextField from '@mui/material/TextField';
@@ -10,11 +11,12 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import comunidades from '../../../public/arbol.json'
+//import Grid from '@mui/material/Grid';
+import provincias from '../../../public/provincias_poblaciones.json'
 
 function Page() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
+
     const [nick, setNick] = useState('');
     const [birthday, setBirthday] = useState('');
     const [towns, setTowns] = useState<{ parent_code: string; code: string; label: string; }[]>([]);
@@ -22,12 +24,19 @@ function Page() {
     const [selectedProvince, setSelectedProvince] = useState('');
     const [selectedTown, setSelectedTown] = useState('');
 
+    if (status === 'loading') {
+        return <div>Cargando...</div>;
+    }
+    
     // Extraer todas las provincias una sola vez
-    const opcionesProvincias = comunidades.flatMap(comunidad => comunidad.provinces.map(provincia => ({
+    const opcionesProvincias = provincias.map(provincia => ({
         value: provincia.code,
         label: provincia.label,
-        towns: provincia.towns
-    })));
+        towns: provincia.towns.map(town => ({
+            value: town.code,
+            label: town.label
+        }))
+    }))
 
     const handleProvinceChange = (e: SelectChangeEvent) => {
         const newSelectedProvince = e.target.value;
@@ -37,14 +46,35 @@ function Page() {
         const foundProvince = opcionesProvincias.find(provincia => provincia.value === newSelectedProvince);
         setTowns(foundProvince ? foundProvince.towns : []);
     };
-    
 
-    // Funciones para manejar cambios en los Selects, similar a tu lógica existente...
+    // Función para manejar el envío del formulario
+    const handleFormSubmit = async (event) => {
+        event.preventDefault() // Prevenga la recarga de la página
+        console.log("Formulario enviado. UserID: "+session?.user.id)
 
+        // Asegúrese de que los nombres de las columnas coincidan con su esquema de base de datos
+        const { data, error } = await supabase
+            .from('users') // Reemplace 'users' con el nombre real de su tabla
+            .update({
+                nick: nick,
+                birthday: birthday,
+                provincia: selectedProvince,
+                poblacion: selectedTown
+            })
+            .match({ id: session.user.id }); // Utilice 'match' para la clave primaria
+
+        if (error) {
+            // Manejar errores aquí, por ejemplo, mostrar un mensaje al usuario
+            console.error('Error al actualizar la base de datos', error);
+        } else {
+            // Manejar éxito aquí, por ejemplo, mostrar un mensaje al usuario
+            console.log('Datos actualizados con éxito', data);
+        }
+    }
     return (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
             <Box width="66.66%" maxWidth={600} mx="auto">
-                <form>
+                <form onSubmit={handleFormSubmit}>
                     <TextField
                         label="Email"
                         type="email"
