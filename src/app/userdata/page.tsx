@@ -1,7 +1,7 @@
 // src/app/userdata/page.tsx
 "use client";
 
-import { supabase } from '../../pages/api/supabaseClient'
+import { supabase } from '../../utils/supabaseClient'
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import TextField from '@mui/material/TextField';

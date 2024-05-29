@@ -1,6 +1,6 @@
 // src/utils/supabase-utils.ts
 
-import { supabase } from '../pages/api/supabaseClient'
+import { supabase } from './supabaseClient'
 
 export const addUserIfNotExist = async (email: string, name: string) => {
     try {
