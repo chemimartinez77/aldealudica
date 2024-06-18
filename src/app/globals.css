@@ -12,3 +12,15 @@
     box-shadow: 4px 4px 4px lightgrey;
 }
 
+.group:hover .group-hover\:flex {
+    display: flex;
+}
+.group-hover\:flex {
+    display: none;
+}
+.relative .group-hover\:flex:hover {
+    display: flex;
+    background-color: #2b3f5f; /* Mismo color que el fondo de "Partidas" */
+}
+
+

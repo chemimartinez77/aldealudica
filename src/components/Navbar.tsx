@@ -11,7 +11,7 @@ function Navbar() {
     const { data: session } = useSession()
 
     useEffect(() => {
-        // Asegúrese de que el usuario está definido y que tanto el email como el name son strings no vacíos.
+        // Asegúrate de que el usuario está definido y que tanto el email como el nombre son strings no vacíos.
         if (session?.user?.email && typeof session.user.email === 'string' &&
             session?.user?.name && typeof session.user.name === 'string') {
             addUserIfNotExist(session.user.email, session.user.name);
@@ -20,21 +20,31 @@ function Navbar() {
 
     return (
         <nav className='bg-slate-900 flex items-center py-3 justify-between px-24 text-white'>
-            <div className="flex items-center gap-4"> {/* Agregado contenedor flex con gap */}
-            <Image src='/logo.png' alt="Logo" width={40} height={40} className='rounded-full cursor-pointer' />
+            <div className="flex items-center gap-4">
+                <Image src='/logo.png' alt="Logo" width={40} height={40} className='rounded-full cursor-pointer' />
                 <Link href="/" legacyBehavior>
                     <a className="text-xl font-bold">Aldea Lúdica</a>
                 </Link>
-                {session?.user && ( // Solo mostrar si el usuario ha iniciado sesión
+                {session?.user && (
                     <Link href="/userdata" legacyBehavior>
                         <a className="hover:text-sky-400 transition duration-300 ease-in-out cursor-pointer">Datos de usuario</a>
                     </Link>
                 )}
-                {session?.user && ( // Solo mostrar si el usuario ha iniciado sesión
-                    <Link href="/partidas" legacyBehavior>
+                {session?.user && (
+                    <div className="relative group">
                         <a className="hover:text-sky-400 transition duration-300 ease-in-out cursor-pointer">Partidas</a>
-                    </Link>
+                        <div className="absolute hidden group-hover:flex flex-col bg-gray-700 text-white rounded shadow-lg" style={{ top: '100%', left: 0 }}>
+                            <Link href="/partidas" legacyBehavior>
+                                <a className="block px-4 py-2 hover:bg-gray-600 transition duration-300 ease-in-out whitespace-nowrap">Crear Partida</a>
+                            </Link>
+                            <Link href="/listado" legacyBehavior>
+                                <a className="block px-4 py-2 hover:bg-gray-600 transition duration-300 ease-in-out">Listado</a>
+                            </Link>
+                        </div>
+                    </div>
                 )}
+
+
             </div>
             {session?.user ? (
                 <div className='flex gap-x-2 items-center'>
