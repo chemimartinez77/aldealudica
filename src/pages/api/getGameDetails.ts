@@ -1,8 +1,9 @@
 // src/pages/api/getGameDetails.ts
 import { NextApiRequest, NextApiResponse } from 'next';
+import { supabase } from '../../utils/supabaseClient';
 import { parseString } from 'xml2js';
 
-async function fetchGameDetails(gameId: string) {
+async function fetchGameDetailsFromBGG(gameId: string) {
     const detailsUrl = `https://boardgamegeek.com/xmlapi2/thing?id=${gameId}`;
     const response = await fetch(detailsUrl);
     const xml = await response.text();
@@ -21,17 +22,37 @@ async function fetchGameDetails(gameId: string) {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const { gameId } = req.query;
+    const { gameId, id } = req.query;
 
-    if (!gameId) {
-        return res.status(400).json({ error: 'Missing gameId parameter' });
-    }
+    if (gameId) {
+        try {
+            const imageUrl = await fetchGameDetailsFromBGG(gameId as string);
+            res.status(200).json({ imageUrl });
+        } catch (error) {
+            console.error('Error fetching game details:', error);
+            res.status(500).json({ error: 'Failed to fetch game details' });
+        }
+    } else if (id) {
+        try {
+            const { data, error } = await supabase
+                .from('partidas')
+                .select('*')
+                .eq('id', id)
+                .single();
 
-    try {
-        const imageUrl = await fetchGameDetails(gameId as string);
-        res.status(200).json({ imageUrl });
-    } catch (error) {
-        console.error('Error fetching game details:', error);
-        res.status(500).json({ error: 'Failed to fetch game details' });
+            if (error) {
+                return res.status(500).json({ error: error.message });
+            }
+
+            // Assume that players are stored in a separate table or within the partida record as an array
+            const players = data.players || []; // Adjust this based on your actual data structure
+
+            res.status(200).json({ ...data, players });
+        } catch (error) {
+            console.error('Error fetching partida details:', error);
+            res.status(500).json({ error: 'Failed to fetch partida details' });
+        }
+    } else {
+        res.status(400).json({ error: 'Missing query parameters' });
     }
 }

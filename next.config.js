@@ -1,12 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    reactStrictMode: true,
     images: {
-      remotePatterns: [
-        { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
-        { protocol: 'https', hostname: 'cf.geekdo-images.com' }, // Agrega esta línea
-      ],
+      domains: ['lh3.googleusercontent.com', 'cf.geekdo-images.com'],
     },
-    // ... otras configuraciones ...
+    async redirects() {
+      return [
+        {
+          source: '/partidas',
+          destination: '/partidas/crear',
+          permanent: true,
+        },
+      ];
+    },
   };
   
   module.exports = nextConfig;

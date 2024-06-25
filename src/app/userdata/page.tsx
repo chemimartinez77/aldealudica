@@ -1,8 +1,7 @@
-// src/app/userdata/page.tsx
 "use client";
 
-import { supabase } from '../../utils/supabaseClient'
-import { useState } from 'react';
+import { supabase } from '../../utils/supabaseClient';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import TextField from '@mui/material/TextField';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
@@ -12,45 +11,80 @@ import InputLabel from '@mui/material/InputLabel';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 //import Grid from '@mui/material/Grid';
-import provincias from '../../../public/provincias_poblaciones.json'
+import provincias from '../../../public/provincias_poblaciones.json';
 
-function Page() {
+interface Provincia {
+    value: string;
+    label: string;
+    towns: { value: string; label: string }[];
+}
+
+const Page = () => {
     const { data: session, status } = useSession();
 
     const [nick, setNick] = useState('');
     const [birthday, setBirthday] = useState('');
-    const [towns, setTowns] = useState<{ parent_code: string; code: string; label: string; }[]>([]);
-
+    const [towns, setTowns] = useState<{ value: string; label: string; }[]>([]);
     const [selectedProvince, setSelectedProvince] = useState('');
     const [selectedTown, setSelectedTown] = useState('');
+
+    useEffect(() => {
+        // Fetch user data from the database and set initial states
+        const fetchUserData = async () => {
+            if (session?.user?.id) {
+                const { data, error } = await supabase
+                    .from('users') // Reemplaza con el nombre de tu tabla
+                    .select('nick, birthday, provincia, poblacion')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (data) {
+                    setNick(data.nick || '');
+                    setBirthday(data.birthday || '');
+                    setSelectedProvince(data.provincia || '');
+                    setSelectedTown(data.poblacion || '');
+                    const foundProvince = provincias.find(prov => prov.code === data.provincia);
+                    setTowns(foundProvince ? foundProvince.towns.map(town => ({
+                        value: town.code,
+                        label: town.label
+                    })) : []);
+                } else if (error) {
+                    console.error('Error fetching user data:', error);
+                }
+            }
+        };
+
+        fetchUserData();
+    }, [session]);
 
     if (status === 'loading') {
         return <div>Cargando...</div>;
     }
-    
+
     // Extraer todas las provincias una sola vez
-    const opcionesProvincias = provincias.map(provincia => ({
+    const opcionesProvincias: Provincia[] = provincias.map(provincia => ({
         value: provincia.code,
         label: provincia.label,
         towns: provincia.towns.map(town => ({
             value: town.code,
             label: town.label
         }))
-    }))
+    }));
 
     const handleProvinceChange = (e: SelectChangeEvent) => {
         const newSelectedProvince = e.target.value;
         setSelectedProvince(newSelectedProvince);
-    
+
         // Encuentra la provincia seleccionada y actualiza las localidades
         const foundProvince = opcionesProvincias.find(provincia => provincia.value === newSelectedProvince);
         setTowns(foundProvince ? foundProvince.towns : []);
+        setSelectedTown(''); // Reset selected town when province changes
     };
 
     // Función para manejar el envío del formulario
-    const handleFormSubmit = async (event) => {
-        event.preventDefault() // Prevenga la recarga de la página
-        console.log("Formulario enviado. UserID: "+session?.user.id)
+    const handleFormSubmit = async (event: React.FormEvent) => {
+        event.preventDefault(); // Prevenga la recarga de la página
+        console.log("Formulario enviado. UserID: " + session?.user?.id);
 
         // Asegúrese de que los nombres de las columnas coincidan con su esquema de base de datos
         const { data, error } = await supabase
@@ -61,7 +95,7 @@ function Page() {
                 provincia: selectedProvince,
                 poblacion: selectedTown
             })
-            .match({ id: session.user.id }); // Utilice 'match' para la clave primaria
+            .eq('id', session?.user?.id); // Utilice 'eq' para la clave primaria
 
         if (error) {
             // Manejar errores aquí, por ejemplo, mostrar un mensaje al usuario
@@ -70,7 +104,8 @@ function Page() {
             // Manejar éxito aquí, por ejemplo, mostrar un mensaje al usuario
             console.log('Datos actualizados con éxito', data);
         }
-    }
+    };
+
     return (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
             <Box width="66.66%" maxWidth={600} mx="auto">
@@ -136,7 +171,7 @@ function Page() {
                         >
                             {/* Aquí mapearías las poblaciones a MenuItems */}
                             {towns.map((town) => (
-                                <MenuItem key={town.code} value={town.label}>{town.label}</MenuItem>
+                                <MenuItem key={town.value} value={town.label}>{town.label}</MenuItem>
                             ))}
                         </Select>
                     </FormControl>
@@ -150,7 +185,6 @@ function Page() {
                             Guardar Cambios
                         </Button>
                     </Box>
-
                 </form>
             </Box>
         </Box>
