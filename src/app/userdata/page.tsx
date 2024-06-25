@@ -10,7 +10,10 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
-//import Grid from '@mui/material/Grid';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
 import provincias from '../../../public/provincias_poblaciones.json';
 
 interface Provincia {
@@ -28,6 +31,9 @@ const Page = () => {
     const [selectedProvince, setSelectedProvince] = useState('');
     const [selectedTown, setSelectedTown] = useState('');
 
+    const [open, setOpen] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
+
     useEffect(() => {
         // Fetch user data from the database and set initial states
         const fetchUserData = async () => {
@@ -35,7 +41,7 @@ const Page = () => {
                 const { data, error } = await supabase
                     .from('users') // Reemplaza con el nombre de tu tabla
                     .select('nick, birthday, provincia, poblacion')
-                    .eq('id', session.user.id)
+                    .eq('external_id', session.user.id)
                     .single();
 
                 if (data) {
@@ -95,15 +101,19 @@ const Page = () => {
                 provincia: selectedProvince,
                 poblacion: selectedTown
             })
-            .eq('id', session?.user?.id); // Utilice 'eq' para la clave primaria
+            .eq('external_id', session?.user?.id); // Utilice 'eq' para la clave primaria
 
         if (error) {
             // Manejar errores aquí, por ejemplo, mostrar un mensaje al usuario
             console.error('Error al actualizar la base de datos', error);
+            setModalMessage('Error al actualizar los datos');
         } else {
             // Manejar éxito aquí, por ejemplo, mostrar un mensaje al usuario
             console.log('Datos actualizados con éxito', data);
+            setModalMessage('Datos actualizados con éxito');
         }
+
+        setOpen(true); // Abre la modal para mostrar el mensaje
     };
 
     return (
@@ -171,7 +181,7 @@ const Page = () => {
                         >
                             {/* Aquí mapearías las poblaciones a MenuItems */}
                             {towns.map((town) => (
-                                <MenuItem key={town.value} value={town.label}>{town.label}</MenuItem>
+                                <MenuItem key={town.value} value={town.value}>{town.label}</MenuItem>
                             ))}
                         </Select>
                     </FormControl>
@@ -187,6 +197,19 @@ const Page = () => {
                     </Box>
                 </form>
             </Box>
+
+            {/* Modal para mostrar el resultado */}
+            <Dialog open={open} onClose={() => setOpen(false)}>
+                <DialogTitle>Resultado</DialogTitle>
+                <DialogContent>
+                    <p>{modalMessage}</p>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpen(false)} color="primary">
+                        Cerrar
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }
