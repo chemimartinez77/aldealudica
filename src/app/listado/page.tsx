@@ -1,4 +1,3 @@
-// src/app/listado/page.tsx
 "use client"
 
 import React, { useEffect, useState, useCallback } from 'react'
@@ -132,9 +131,25 @@ const GamesPage = () => {
         setShowAll(true);
     };
 
-    const handleOpenModal = (game: Game) => {
-        setSelectedGame(game);
+    const handleOpenModal = async (game: Game) => {
+        try {
+            const response = await fetch(`/api/getGameDetails?id=${game.id}`);
+            if (!response.ok) {
+                throw new Error('Error fetching game details');
+            }
+            const detailedGame = await response.json();
+            console.log('Detailed game:', JSON.stringify(detailedGame, null, 2));
+            setSelectedGame({
+                ...game,
+                ...detailedGame,
+                players: detailedGame.participants
+            });
+        } catch (error: any) {
+            setError(error.message);
+        }
     };
+    
+    
 
     const handleCloseModal = () => {
         setSelectedGame(null);
@@ -213,7 +228,16 @@ const GamesPage = () => {
                                 <strong>Lugar:</strong> {selectedGame.location}
                             </Typography>
                             <Typography id="game-modal-description" sx={{ mt: 2 }}>
-                                <strong>Jugadores:</strong> {selectedGame.players ? selectedGame.players.join(', ') : 'N/A'}
+                                <strong>Jugadores:</strong> 
+                                {selectedGame.participants && selectedGame.participants.length > 0 ? (
+                                    <ul>
+                                        {selectedGame.participants.map((participant: any) => (
+                                            <li key={participant.user_id}>{participant.users.name}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    'N/A'
+                                )}
                             </Typography>
                         </>
                     )}
