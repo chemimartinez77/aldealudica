@@ -28,6 +28,21 @@ interface Game {
     players?: string[]; // Marcar players como opcional
 }
 
+// Define un botón personalizado
+const CustomButton = styled(Button)({
+    backgroundColor: '#ccc', // Color gris medio
+    color: '#000',
+    '&:hover': {
+        backgroundColor: '#007bff', // Color azul al pasar el ratón
+        color: 'white',
+    },
+    '&:disabled': {
+        backgroundColor: '#ccc', // Color gris medio cuando está desactivado
+        color: '#666', // Color del texto gris oscuro
+        cursor: 'not-allowed',
+    },
+});
+
 const Thumbnail = styled('img')({
     maxHeight: '100px',
     maxWidth: '100px',
@@ -140,7 +155,7 @@ const GamesPage = () => {
                     dropdownMode="select"
                 />
                 <Box mt={2} display="flex" justifyContent="center">
-                    <Button variant="contained" onClick={handleShowAll}>Mostrar Todas</Button>
+                    <CustomButton variant="contained" onClick={handleShowAll}>Mostrar Todas</CustomButton>
                 </Box>
             </Box>
             <Box width="80%" maxWidth={1200} mx="auto">

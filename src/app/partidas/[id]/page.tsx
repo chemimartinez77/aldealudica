@@ -1,49 +1,46 @@
 // src/app/partidas/[id]/page.tsx
-"use client";
-
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { supabase } from '../../../utils/supabaseClient';
+import React, { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Image from 'next/image';
+import { useParams } from 'next/navigation';
 
 interface GameDetails {
+    id: string;
     game: string;
+    imageUrl: string;
     startDate: string;
     startTime: string;
     endDate: string;
     endTime: string;
-    location: string;
     participants: number;
-    imageUrl: string;
+    location: string;
+}
+
+interface Participant {
+    user_id: string;
+    users: {
+        name: string;
+    };
 }
 
 const GameDetailPage = () => {
     const { id } = useParams();
     const [gameDetails, setGameDetails] = useState<GameDetails | null>(null);
+    const [participants, setParticipants] = useState<Participant[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchGameDetails = async () => {
             try {
-                const { data, error } = await supabase
-                    .from('partidas')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
-
-                if (error) {
-                    setError(error.message);
-                    return;
+                const response = await fetch(`/api/getGameDetails?id=${id}`);
+                if (!response.ok) {
+                    throw new Error('Error fetching game details');
                 }
-
-                const detailsResponse = await fetch(`../api/getGameDetails?gameId=${data.gameId}`);
-                const detailsData = await detailsResponse.json();
-
-                setGameDetails({ ...data, imageUrl: detailsData.imageUrl });
+                const data = await response.json();
+                setGameDetails(data);
+                setParticipants(data.participants);
             } catch (error) {
-                setError('Failed to fetch game details');
+                setError((error as Error).message);
             }
         };
 
@@ -59,15 +56,23 @@ const GameDetailPage = () => {
     }
 
     return (
-        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="100vh">
-            <Box width="66.66%" maxWidth={600} mx="auto">
-                <Image src={gameDetails.imageUrl} alt={gameDetails.game} width={200} height={200} />
-                <Typography variant="h4">{gameDetails.game}</Typography>
-                <Typography variant="body1">Inicio: {gameDetails.startDate} {gameDetails.startTime}</Typography>
-                <Typography variant="body1">Fin: {gameDetails.endDate} {gameDetails.endTime}</Typography>
-                <Typography variant="body1">Lugar: {gameDetails.location}</Typography>
-                <Typography variant="body1">Número de jugadores: {gameDetails.participants}</Typography>
-            </Box>
+        <Box>
+            <Typography variant="h4">{gameDetails.game}</Typography>
+            <img
+                src={gameDetails.imageUrl || '/noimg.jpg'}
+                alt={gameDetails.game}
+                style={{ width: 200, height: 200, borderRadius: '10px', boxShadow: '0 0 8px #888' }}
+            />
+            <Typography variant="body1">Inicio: {gameDetails.startDate} {gameDetails.startTime}</Typography>
+            <Typography variant="body1">Fin: {gameDetails.endDate} {gameDetails.endTime}</Typography>
+            <Typography variant="body1">Nº Jugadores: {gameDetails.participants}</Typography>
+            <Typography variant="body1">Lugar: {gameDetails.location}</Typography>
+            <Typography variant="body1">Jugadores:</Typography>
+            <ul>
+                {participants.map((participant) => (
+                    <li key={participant.user_id}>{participant.users.name}</li>
+                ))}
+            </ul>
         </Box>
     );
 };
