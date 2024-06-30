@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 
 interface GameDetails {
     id: string;
@@ -60,10 +61,12 @@ const GameDetailPage = () => {
     return (
         <Box>
             <Typography variant="h4">{gameDetails.game}</Typography>
-            <img
-                src={gameDetails.imageUrl || '/noimg.jpg'}
-                alt={gameDetails.game}
-                style={{ width: 200, height: 200, borderRadius: '10px', boxShadow: '0 0 8px #888' }}
+            <Image
+                src={partida.imageUrl || '/noimg.jpg'}
+                alt={partida.title}
+                width={200}
+                height={200}
+                style={{ borderRadius: '10px' }}
             />
             <Typography variant="body1">Inicio: {gameDetails.startDate} {gameDetails.startTime}</Typography>
             <Typography variant="body1">Fin: {gameDetails.endDate} {gameDetails.endTime}</Typography>
