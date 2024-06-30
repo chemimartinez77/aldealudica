@@ -1,4 +1,3 @@
-// src/pages/api/getGameDetails.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '../../utils/supabaseClient';
 import { parseString } from 'xml2js';

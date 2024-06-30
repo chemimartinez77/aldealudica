@@ -11,12 +11,15 @@ import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { format, isSameDay } from 'date-fns'
 import Button from '@mui/material/Button'
+import { useSession } from 'next-auth/react'
+import { makeStyles } from '@mui/styles'
 
 interface Game {
     id: string;
     game: string;
     title: string;
     participants: number;
+    participantCount: number;
     gameId: string;
     imageUrl: string;
     startDate: string;
@@ -24,22 +27,27 @@ interface Game {
     endDate: string;
     endTime: string;
     location: string;
-    players?: string[]; // Marcar players como opcional
+    players?: string[];
+    creatorId?: string;
 }
 
-// Define un botón personalizado
-const CustomButton = styled(Button)({
-    backgroundColor: '#ccc', // Color gris medio
-    color: '#000',
-    '&:hover': {
-        backgroundColor: '#007bff', // Color azul al pasar el ratón
-        color: 'white',
-    },
-    '&:disabled': {
-        backgroundColor: '#ccc', // Color gris medio cuando está desactivado
-        color: '#666', // Color del texto gris oscuro
-        cursor: 'not-allowed',
-    },
+const useStyles = makeStyles({
+    customButton: {
+        backgroundColor: '#ADD8E6', // Azul claro
+        color: '#000', // Letras negras
+        '&:hover': {
+            backgroundColor: '#007bff', // Color azul al pasar el ratón
+            color: 'white',
+        },
+        '&:disabled': {
+            backgroundColor: '#ccc', // Color gris medio cuando está desactivado
+            color: '#666', // Color del texto gris oscuro
+            cursor: 'not-allowed',
+        },
+        boxShadow: 'none', // Eliminar sombra
+        border: 'none', // Eliminar borde
+        textTransform: 'none', // Mantener el texto sin transformar
+    }
 });
 
 const Thumbnail = styled('img')({
@@ -75,13 +83,40 @@ const modalStyle = {
     borderRadius: '10px',
 };
 
+const successModalStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 300,
+    backgroundColor: 'white',
+    boxShadow: 24,
+    padding: 4,
+    borderRadius: '10px',
+    textAlign: 'center' as 'center',
+};
+
+const fullGameTextStyle = {
+    color: 'black',
+    backgroundColor: '#ccc',
+    padding: '4px',
+    borderRadius: '4px',
+    fontWeight: 'bold' as 'bold',
+    textAlign: 'center' as 'center',
+    marginTop: '8px',
+};
+
 const GamesPage = () => {
+    const { data: session } = useSession();
+    const classes = useStyles();
     const [games, setGames] = useState<Game[]>([]);
     const [filteredGames, setFilteredGames] = useState<Game[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
     const [showAll, setShowAll] = useState<boolean>(false);
     const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [isSuccessModalOpen, setIsSuccessModalOpen] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchGames = async () => {
@@ -132,27 +167,78 @@ const GamesPage = () => {
     };
 
     const handleOpenModal = async (game: Game) => {
+        // Fetch detailed game info including players
         try {
             const response = await fetch(`/api/getGameDetails?id=${game.id}`);
             if (!response.ok) {
                 throw new Error('Error fetching game details');
             }
             const detailedGame = await response.json();
-            console.log('Detailed game:', JSON.stringify(detailedGame, null, 2));
+            console.log('Detailed game -> ', JSON.stringify(detailedGame, null, 2));
             setSelectedGame({
                 ...game,
-                ...detailedGame,
-                players: detailedGame.participants
+                players: detailedGame.participants.map((p: any) => p.users.name),
+                creatorId: detailedGame.creator_id,
             });
         } catch (error: any) {
             setError(error.message);
         }
     };
-    
-    
 
-    const handleCloseModal = () => {
-        setSelectedGame(null);
+    const handleJoinGame = async () => {
+        if (selectedGame && session?.user?.id) {
+            try {
+                const response = await fetch('/api/joinGame', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ gameId: selectedGame.id, userId: session.user.id }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error joining game');
+                }
+
+                setSuccessMessage('Apuntado correctamente a la partida');
+                setIsSuccessModalOpen(true);
+
+                // Refresh game details to show the updated participant list
+                await handleOpenModal(selectedGame);
+            } catch (error: any) {
+                setError(error.message);
+            }
+        }
+    };
+
+    const handleLeaveGame = async () => {
+        if (selectedGame && session?.user?.id) {
+            try {
+                const response = await fetch('/api/leaveGame', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ gameId: selectedGame.id, userId: session.user.id }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error leaving game');
+                }
+
+                setSuccessMessage('Te has dado de baja de la partida');
+                setIsSuccessModalOpen(true);
+
+                // Refresh game details to show the updated participant list
+                await handleOpenModal(selectedGame);
+            } catch (error: any) {
+                setError(error.message);
+            }
+        }
+    };
+
+    const handleCloseSuccessModal = () => {
+        setIsSuccessModalOpen(false);
     };
 
     return (
@@ -170,7 +256,7 @@ const GamesPage = () => {
                     dropdownMode="select"
                 />
                 <Box mt={2} display="flex" justifyContent="center">
-                    <CustomButton variant="contained" onClick={handleShowAll}>Mostrar Todas</CustomButton>
+                    <Button className={classes.customButton} variant="contained" onClick={handleShowAll}>Mostrar Todas</Button>
                 </Box>
             </Box>
             <Box width="80%" maxWidth={1200} mx="auto">
@@ -181,14 +267,19 @@ const GamesPage = () => {
                             <Box onClick={() => handleOpenModal(game)}>
                                 <GameCard>
                                     <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" flex="1">
-                                        <Thumbnail 
+                                        <Thumbnail
                                             src={game.imageUrl || '/noimg.jpg'} // Usa la URL de la imagen obtenida
-                                            alt={game.game} 
+                                            alt={game.game}
                                         />
                                         <Typography variant="h6">{game.game}</Typography>
-                                        <Typography variant="body1">Nº Jugadores: {game.participants}</Typography>
+                                        <Typography variant="body1">Nº Jugadores: {game.participantCount}/{game.participants}</Typography>
                                         <Typography variant="body2">Inicio: {game.startDate} {game.startTime}</Typography>
                                         <Typography variant="body2">Fin: {game.endDate} {game.endTime}</Typography>
+                                        {game.participantCount >= game.participants && (
+                                            <Typography sx={fullGameTextStyle}>
+                                                Partida completa
+                                            </Typography>
+                                        )}
                                     </Box>
                                 </GameCard>
                             </Box>
@@ -199,7 +290,7 @@ const GamesPage = () => {
 
             <Modal
                 open={!!selectedGame}
-                onClose={handleCloseModal}
+                onClose={() => setSelectedGame(null)}
                 aria-labelledby="game-modal-title"
                 aria-describedby="game-modal-description"
             >
@@ -227,20 +318,60 @@ const GamesPage = () => {
                             <Typography id="game-modal-description" sx={{ mt: 2 }}>
                                 <strong>Lugar:</strong> {selectedGame.location}
                             </Typography>
-                            <Typography id="game-modal-description" sx={{ mt: 2 }}>
-                                <strong>Jugadores:</strong> 
-                                {selectedGame.participants && selectedGame.participants.length > 0 ? (
-                                    <ul>
-                                        {selectedGame.participants.map((participant: any) => (
-                                            <li key={participant.user_id}>{participant.users.name}</li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    'N/A'
-                                )}
+                            <Typography id="game-modal-description" sx={{ mt: 2, fontWeight: 'bold', backgroundColor: '#f0f0f0', padding: '4px', borderRadius: '4px' }}>
+                                Jugadores:
                             </Typography>
+                            <ul>
+                                {selectedGame.players?.length ? selectedGame.players.map((player, index) => (
+                                    <li key={index}>{player}</li>
+                                )) : 'N/A'}
+                            </ul>
+                            {selectedGame.players?.length >= selectedGame.participants && (
+                                <Typography sx={fullGameTextStyle}>
+                                    Partida completa
+                                </Typography>
+                            )}
+                            {session?.user?.id !== selectedGame.creatorId && !selectedGame.players?.includes(session?.user?.name) && selectedGame.players?.length < selectedGame.participants && (
+                                <Box display="flex" justifyContent="center" mt={2}>
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={handleJoinGame}
+                                    >
+                                        QUIERO JUGAR
+                                    </Button>
+                                </Box>
+                            )}
+
+                            {session?.user?.id !== selectedGame.creatorId && selectedGame.players?.includes(session?.user?.name) && (
+                                <Box display="flex" justifyContent="center" mt={2}>
+                                    <Button
+                                        variant="contained"
+                                        color="secondary"
+                                        onClick={handleLeaveGame}
+                                    >
+                                        DARSE DE BAJA
+                                    </Button>
+                                </Box>
+                            )}
                         </>
                     )}
+                </Box>
+            </Modal>
+
+            <Modal
+                open={isSuccessModalOpen}
+                onClose={handleCloseSuccessModal}
+                aria-labelledby="success-modal-title"
+                aria-describedby="success-modal-description"
+            >
+                <Box sx={successModalStyle}>
+                    <Typography id="success-modal-title" variant="h6" component="h2">
+                        {successMessage}
+                    </Typography>
+                    <Button variant="contained" onClick={handleCloseSuccessModal} sx={{ mt: 2 }}>
+                        Cerrar
+                    </Button>
                 </Box>
             </Modal>
         </Box>

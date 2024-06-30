@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { signIn, useSession, signOut } from 'next-auth/react'
 import { addUserIfNotExist } from '../utils/supabase-utils'
 import { useEffect } from 'react'
+import { supabase } from '../utils/supabaseClient'
 
 function Navbar() {
 
@@ -17,6 +18,30 @@ function Navbar() {
             addUserIfNotExist(session.user.email, session.user.name);
         }
     }, [session])
+
+    const handleSignOut = async () => {
+        if (session?.user?.id) {
+            try {
+                // Actualiza el registro de logout en la base de datos
+                const { error: logoutHistoryError } = await supabase
+                    .from('user_login_history')
+                    .update({ logout_time: new Date() })
+                    .eq('user_id', session.user.id)
+                    .is('logout_time', null);
+
+                if (logoutHistoryError) {
+                    console.error('Error updating logout time:', logoutHistoryError);
+                }
+            } catch (error) {
+                console.error('Error during logout:', error);
+            }
+        }
+
+        // Luego llama a signOut
+        await signOut({
+            callbackUrl: "/"
+        });
+    }
 
     return (
         <nav className='bg-slate-900 flex items-center py-3 justify-between px-24 text-white'>
@@ -43,8 +68,6 @@ function Navbar() {
                         </div>
                     </div>
                 )}
-
-
             </div>
             {session?.user ? (
                 <div className='flex gap-x-2 items-center'>
@@ -52,13 +75,7 @@ function Navbar() {
                     {session.user.image && (
                         <Image src={session.user.image} alt="User Image" width={40} height={40} className='rounded-full cursor-pointer' />
                     )}
-                    <button
-                        onClick={async () => {
-                            await signOut({
-                                callbackUrl: "/"
-                            })
-                        }}
-                    >
+                    <button onClick={handleSignOut}>
                         Sign Out
                     </button>
                 </div>

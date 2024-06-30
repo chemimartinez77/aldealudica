@@ -2,28 +2,24 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '../../utils/supabaseClient';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method === 'GET') {
+    if (req.method === 'POST') {
+        const { gameId, userId } = req.body;
         try {
             const { data, error } = await supabase
-                .from('partidas')
-                .select(`
-                    *,
-                    participantes:partidas_have_users (
-                        user_id
-                    )
-                `);
+                .from('partidas_have_users')
+                .update({
+                    leave_date: new Date()
+                })
+                .eq('partida_id', gameId)
+                .eq('user_id', userId)
+                .is('leave_date', null);
 
             if (error) {
-                console.error('Error fetching games:', error);
+                console.error('Error leaving game:', error);
                 throw error;
             }
 
-            const gamesWithParticipantCount = data.map(game => ({
-                ...game,
-                participantCount: game.participantes.length
-            }));
-
-            res.status(200).json(gamesWithParticipantCount);
+            res.status(200).json(data);
         } catch (error) {
             console.error('Error in catch block:', error);
             res.status(500).json({ error: error.message });
