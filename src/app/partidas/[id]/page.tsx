@@ -1,3 +1,5 @@
+"use client"
+
 // src/app/partidas/[id]/page.tsx
 import React, { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
