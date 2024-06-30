@@ -9,7 +9,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 .select(`
                     *,
                     participantes:partidas_have_users (
-                        user_id
+                        user_id,
+                        join_date,
+                        leave_date
                     )
                 `);
 
@@ -18,10 +20,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 throw error;
             }
 
-            const gamesWithParticipantCount = data.map(game => ({
-                ...game,
-                participantCount: game.participantes.length
-            }));
+            const gamesWithParticipantCount = data.map(game => {
+                const activeParticipants = game.participantes.filter((p: any) => p.join_date !== null && p.leave_date === null);
+                return {
+                    ...game,
+                    participantCount: activeParticipants.length
+                };
+            });
 
             res.status(200).json(gamesWithParticipantCount);
         } catch (error) {

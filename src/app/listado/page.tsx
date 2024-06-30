@@ -33,20 +33,17 @@ interface Game {
 
 const useStyles = makeStyles({
     customButton: {
-        backgroundColor: '#ADD8E6', // Azul claro
+        backgroundColor: '#A7E6FF', // Azul claro
         color: '#000', // Letras negras
         '&:hover': {
-            backgroundColor: '#007bff', // Color azul al pasar el ratón
+            backgroundColor: '#3572EF', // Color azul al pasar el ratón
             color: 'white',
         },
         '&:disabled': {
             backgroundColor: '#ccc', // Color gris medio cuando está desactivado
             color: '#666', // Color del texto gris oscuro
             cursor: 'not-allowed',
-        },
-        boxShadow: 'none', // Eliminar sombra
-        border: 'none', // Eliminar borde
-        textTransform: 'none', // Mantener el texto sin transformar
+        }
     }
 });
 
@@ -175,15 +172,22 @@ const GamesPage = () => {
             }
             const detailedGame = await response.json();
             console.log('Detailed game -> ', JSON.stringify(detailedGame, null, 2));
+    
+            // Filtrar los participantes que tienen join_date != null y leave_date == null
+            const activeParticipants = detailedGame.participants
+                .filter((p: any) => p.join_date !== null && p.leave_date === null)
+                .map((p: any) => p.users.name);
+    
             setSelectedGame({
                 ...game,
-                players: detailedGame.participants.map((p: any) => p.users.name),
+                players: activeParticipants,
                 creatorId: detailedGame.creator_id,
             });
         } catch (error: any) {
             setError(error.message);
         }
     };
+    
 
     const handleJoinGame = async () => {
         if (selectedGame && session?.user?.id) {
@@ -195,14 +199,20 @@ const GamesPage = () => {
                     },
                     body: JSON.stringify({ gameId: selectedGame.id, userId: session.user.id }),
                 });
-
+    
+                const responseData = await response.json();
+    
                 if (!response.ok) {
+                    // Si el mensaje de error específico está presente, lánzalo como un error
+                    if (responseData.message === 'Ya estás inscrito en la partida o te borraste de ella, contacta con un administrador') {
+                        throw new Error(responseData.message);
+                    }
                     throw new Error('Error joining game');
                 }
-
+    
                 setSuccessMessage('Apuntado correctamente a la partida');
                 setIsSuccessModalOpen(true);
-
+    
                 // Refresh game details to show the updated participant list
                 await handleOpenModal(selectedGame);
             } catch (error: any) {
@@ -210,6 +220,10 @@ const GamesPage = () => {
             }
         }
     };
+    
+    
+    
+    
 
     const handleLeaveGame = async () => {
         if (selectedGame && session?.user?.id) {
@@ -333,11 +347,7 @@ const GamesPage = () => {
                             )}
                             {session?.user?.id !== selectedGame.creatorId && !selectedGame.players?.includes(session?.user?.name) && selectedGame.players?.length < selectedGame.participants && (
                                 <Box display="flex" justifyContent="center" mt={2}>
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        onClick={handleJoinGame}
-                                    >
+                                    <Button className={classes.customButton} variant="contained" onClick={handleJoinGame}>
                                         QUIERO JUGAR
                                     </Button>
                                 </Box>
@@ -345,11 +355,7 @@ const GamesPage = () => {
 
                             {session?.user?.id !== selectedGame.creatorId && selectedGame.players?.includes(session?.user?.name) && (
                                 <Box display="flex" justifyContent="center" mt={2}>
-                                    <Button
-                                        variant="contained"
-                                        color="secondary"
-                                        onClick={handleLeaveGame}
-                                    >
+                                    <Button className={classes.customButton} variant="contained" onClick={handleLeaveGame}>
                                         DARSE DE BAJA
                                     </Button>
                                 </Box>
@@ -369,7 +375,7 @@ const GamesPage = () => {
                     <Typography id="success-modal-title" variant="h6" component="h2">
                         {successMessage}
                     </Typography>
-                    <Button variant="contained" onClick={handleCloseSuccessModal} sx={{ mt: 2 }}>
+                    <Button className={classes.customButton} variant="contained" onClick={handleCloseSuccessModal} sx={{ mt: 2 }}>
                         Cerrar
                     </Button>
                 </Box>
