@@ -65,8 +65,8 @@ const GameDetailPage = () => {
         <Box>
             <Typography variant="h4">{gameDetails.game}</Typography>
             <Image
-                src={partida.imageUrl || '/noimg.jpg'}
-                alt={partida.title}
+                src={gameDetails.imageUrl || '/noimg.jpg'}
+                alt={gameDetails.game}
                 width={200}
                 height={200}
                 style={{ borderRadius: '10px' }}
