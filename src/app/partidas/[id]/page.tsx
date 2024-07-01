@@ -27,7 +27,8 @@ interface Participant {
 }
 
 const GameDetailPage = () => {
-    const { id } = useParams();
+    const params = useParams();
+    const id = params?.id as string; // Ensure id is of type string
     const [gameDetails, setGameDetails] = useState<GameDetails | null>(null);
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -47,7 +48,9 @@ const GameDetailPage = () => {
             }
         };
 
-        fetchGameDetails();
+        if (id) {
+            fetchGameDetails();
+        }
     }, [id]);
 
     if (error) {

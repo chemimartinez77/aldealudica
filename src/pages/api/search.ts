@@ -2,7 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { parseString } from 'xml2js';
 
-async function fetchGameDetails(gameId) {
+async function fetchGameDetails(gameId: string): Promise<string> {
   const detailsUrl = `https://boardgamegeek.com/xmlapi2/thing?id=${gameId}`;
   try {
     const response = await fetch(detailsUrl);
@@ -31,12 +31,12 @@ async function fetchGameDetails(gameId) {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { query } = req.query;
-  const bggUrl = `https://boardgamegeek.com/xmlapi2/search?query=${encodeURIComponent(query)}&type=boardgame`;
+  const bggUrl = `https://boardgamegeek.com/xmlapi2/search?query=${encodeURIComponent(query as string)}&type=boardgame`;
 
   try {
     const bggResponse = await fetch(bggUrl);
     const bggData = await bggResponse.text();
-    const parseXml = (xml) => new Promise((resolve, reject) => {
+    const parseXml = (xml: string) => new Promise((resolve, reject) => {
       parseString(xml, (err, result) => {
         if (err) {
           reject(err);
@@ -46,10 +46,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     });
 
-    const result = await parseXml(bggData);
+    const result = await parseXml(bggData) as any;
     const games = result.items && result.items.item ? result.items.item : [];
 
-    const detailedGames = await Promise.all(games.map(async (game) => {
+    const detailedGames = await Promise.all(games.map(async (game: any) => {
       const gameId = game.$.id;
       const imageUrl = await fetchGameDetails(gameId).catch(err => {
         console.error(`Error fetching image for game ID ${gameId}:`, err);

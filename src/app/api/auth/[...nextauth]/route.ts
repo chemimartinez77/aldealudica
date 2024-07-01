@@ -1,7 +1,13 @@
-import NextAuth from 'next-auth';
+import NextAuth, { DefaultSession, DefaultUser } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { supabase } from '../../../../utils/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
+
+// Extender el tipo DefaultUser para incluir `id` y `sessionId`
+interface SessionUser extends DefaultUser {
+    id: string;
+    sessionId: string;
+}
 
 const handler = NextAuth({
     providers: [
@@ -13,24 +19,25 @@ const handler = NextAuth({
     callbacks: {
         async session({ session, token }) {
             if (session.user) {
-                session.user.id = token.sub ?? uuidv4();
-                session.user.sessionId = token.sessionId; // Almacenar sessionId en el objeto de sesión
+                (session.user as SessionUser).id = token.sub ?? uuidv4();
+                (session.user as SessionUser).sessionId = (token.sessionId as string) ?? uuidv4(); // Almacenar sessionId en el objeto de sesión
             }
             return session;
         },
         async jwt({ token, user }) {
             if (user) {
-                token.sub = user.id ?? uuidv4();
+                token.sub = (user as SessionUser).id ?? uuidv4();
                 token.sessionId = uuidv4(); // Generar y almacenar sessionId en el token
             }
             return token;
         },
-        async signIn({ user, account, profile, req }) {
+        async signIn({ user, account, profile, ...context }) {
+            const { req } = context as { req: any }; // Castear context a tipo que contiene req
             const { email, name } = user;
             let ipAddress = req?.headers['x-forwarded-for'] || req?.connection?.remoteAddress || null;
 
             try {
-                let userId = user.id;
+                let userId = (user as SessionUser).id;
 
                 // Intentar encontrar al usuario por su ID externo
                 const { data: existingUser, error: userCheckError } = await supabase
@@ -69,8 +76,8 @@ const handler = NextAuth({
                 }
 
                 // Actualizar el token con el user_id y session_id real
-                user.id = userId;
-                user.sessionId = sessionId; // Almacenar sessionId en el user
+                (user as SessionUser).id = userId;
+                (user as SessionUser).sessionId = sessionId; // Almacenar sessionId en el user
 
                 return true;
             } catch (error) {
@@ -78,24 +85,24 @@ const handler = NextAuth({
                 return false;
             }
         },
-        async signOut({ token }) {
-            // Registrar el evento de logout en la tabla user_login_history
-            try {
-                const { error: logoutHistoryError } = await supabase
-                    .from('user_login_history')
-                    .update({ logout_time: new Date() })
-                    .eq('session_id', token.sessionId) // Utilizar sessionId para actualizar logout_time
-                    .is('logout_time', null);
+        // async signOut({ token }) {
+        //     // Registrar el evento de logout en la tabla user_login_history
+        //     try {
+        //         const { error: logoutHistoryError } = await supabase
+        //             .from('user_login_history')
+        //             .update({ logout_time: new Date() })
+        //             .eq('session_id', token.sessionId as string) // Utilizar sessionId para actualizar logout_time
+        //             .is('logout_time', null);
 
-                if (logoutHistoryError) {
-                    console.error('Error updating logout time:', logoutHistoryError);
-                }
-                return true;
-            } catch (error) {
-                console.error('Error signing out:', error);
-                return false;
-            }
-        },
+        //         if (logoutHistoryError) {
+        //             console.error('Error updating logout time:', logoutHistoryError);
+        //         }
+        //         return true;
+        //     } catch (error) {
+        //         console.error('Error signing out:', error);
+        //         return false;
+        //     }
+        // },
     },
 });
 
