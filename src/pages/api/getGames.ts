@@ -31,7 +31,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             res.status(200).json(gamesWithParticipantCount);
         } catch (error) {
             console.error('Error in catch block:', error);
-            res.status(500).json({ error: error.message });
+            const errorMessage = (error as Error).message; // Type assertion
+            res.status(500).json({ error: errorMessage });
         }
     } else {
         res.status(405).json({ message: 'Method not allowed' });
