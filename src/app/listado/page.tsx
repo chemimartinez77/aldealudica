@@ -269,9 +269,12 @@ const GamesPage = () => {
                             <Box onClick={() => handleOpenModal(game)}>
                                 <GameCard>
                                     <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" flex="1">
-                                        <Thumbnail
+                                        <Image
                                             src={game.imageUrl || '/noimg.jpg'} // Usa la URL de la imagen obtenida
                                             alt={game.game}
+                                            width={100}
+                                            height={100}
+                                            style={{ objectFit: 'contain' }}
                                         />
                                         <Typography variant="h6">{game.game}</Typography>
                                         <Typography variant="body1">Nº Jugadores: {game.participantCount}/{game.participants}</Typography>
@@ -289,7 +292,6 @@ const GamesPage = () => {
                     ))}
                 </Grid>
             </Box>
-
             <Modal
                 open={!!selectedGame}
                 onClose={() => setSelectedGame(null)}
@@ -335,34 +337,34 @@ const GamesPage = () => {
                                     Partida completa
                                 </Typography>
                             )}
-                            {session?.user?.id !== selectedGame.creatorId && 
-                             session?.user?.name && 
-                             !selectedGame.players?.includes(session.user.name) && 
-                             (selectedGame.players?.length ?? 0) < (selectedGame.participants ?? 0) && (
-                                <Box display="flex" justifyContent="center" mt={2}>
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        onClick={handleJoinGame}
-                                    >
-                                        QUIERO JUGAR
-                                    </Button>
-                                </Box>
-                            )}
+                            {session?.user?.id !== selectedGame.creatorId &&
+                                session?.user?.name &&
+                                !selectedGame.players?.includes(session.user.name) &&
+                                (selectedGame.players?.length ?? 0) < (selectedGame.participants ?? 0) && (
+                                    <Box display="flex" justifyContent="center" mt={2}>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={handleJoinGame}
+                                        >
+                                            QUIERO JUGAR
+                                        </Button>
+                                    </Box>
+                                )}
 
-                            {session?.user?.id !== selectedGame.creatorId && 
-                             session?.user?.name && 
-                             selectedGame.players?.includes(session.user.name) && (
-                                <Box display="flex" justifyContent="center" mt={2}>
-                                    <Button
-                                        variant="contained"
-                                        color="secondary"
-                                        onClick={handleLeaveGame}
-                                    >
-                                        DARSE DE BAJA
-                                    </Button>
-                                </Box>
-                            )}
+                            {session?.user?.id !== selectedGame.creatorId &&
+                                session?.user?.name &&
+                                selectedGame.players?.includes(session.user.name) && (
+                                    <Box display="flex" justifyContent="center" mt={2}>
+                                        <Button
+                                            variant="contained"
+                                            color="secondary"
+                                            onClick={handleLeaveGame}
+                                        >
+                                            DARSE DE BAJA
+                                        </Button>
+                                    </Box>
+                                )}
                         </>
                     )}
                 </Box>
