@@ -5,14 +5,14 @@ import { v4 as uuidv4 } from 'uuid';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'POST') {
-        const { formData, userId } = req.body;
-        console.log('Received form data:', formData, 'UserId:', userId);
+        const { formData, userId, session } = req.body;
+        console.log('Received form data:', formData, 'UserId:', userId, 'Session:', session);
 
         try {
             // Verifica si el usuario ya existe en la tabla 'users'
             const { data: existingUser, error: userCheckError } = await supabase
                 .from('users')
-                .select('id')
+                .select('id, name, email')
                 .eq('external_id', userId)
                 .single();
 
@@ -25,11 +25,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 res.status(500).json({ error: 'Error checking user' });
                 return;
             } else if (!existingUser) {
-                // Si el usuario no existe, creamos uno nuevo
+                const { name, email } = session.user;
+
+                if (!name || !email) {
+                    res.status(400).json({ error: 'Missing user information' });
+                    return;
+                }
+
                 uuidUserId = uuidv4();
                 const { error: userInsertError } = await supabase
                     .from('users')
-                    .insert({ id: uuidUserId, external_id: userId });
+                    .insert({ id: uuidUserId, external_id: userId, name, email });
 
                 if (userInsertError) {
                     console.error('Error inserting user:', userInsertError);
@@ -62,17 +68,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const partidaId = partidaData.id;
             console.log('Partida inserted with ID:', partidaId);
 
-            if (formData.participate && uuidUserId) {
-                const { error: userPartidaInsertError } = await supabase
-                    .from('partidas_have_users')
-                    .insert({ user_id: uuidUserId, partida_id: partidaId });
+            const joinDate = new Date().toISOString();
+            const { error: userPartidaInsertError } = await supabase
+                .from('partidas_have_users')
+                .insert({ user_id: uuidUserId, partida_id: partidaId, join_date: joinDate });
 
-                if (userPartidaInsertError) {
-                    console.error('Error inserting user into partida:', userPartidaInsertError);
-                    throw userPartidaInsertError;
-                }
-                console.log('User inserted into partida with ID:', partidaId);
+            if (userPartidaInsertError) {
+                console.error('Error inserting user into partida:', userPartidaInsertError);
+                throw userPartidaInsertError;
             }
+            console.log('User inserted into partida with ID:', partidaId);
 
             console.log('Insert successful:', partidaData);
             res.status(200).json({ message: 'Game saved successfully', data: partidaData });
