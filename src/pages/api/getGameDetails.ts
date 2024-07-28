@@ -46,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             // Fetch the participants for the partida
             const { data: participants, error: participantsError } = await supabase
                 .from('partidas_have_users')
-                .select('user_id, users(name), join_date, leave_date')
+                .select('user_id, users ( name )')  // Include the user name
                 .eq('partida_id', id)
                 .is('leave_date', null)
                 .not('join_date', 'is', null);

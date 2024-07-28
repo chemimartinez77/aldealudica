@@ -12,6 +12,8 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { format, isSameDay } from 'date-fns';
 import Button from '@mui/material/Button';
+import { Game } from '../../types/types';
+import GameForm from '../../components/GameForm';
 
 // Define un botón personalizado
 const CustomButton = styled(Button)({
@@ -87,23 +89,6 @@ const fullGameTextStyle = {
     marginTop: '8px',
 };
 
-interface Game {
-    id: string;
-    game: string;
-    title: string;
-    participants: number;
-    participantCount: number;
-    gameId: string;
-    imageUrl: string;
-    startDate: string;
-    startTime: string;
-    endDate: string;
-    endTime: string;
-    location: string;
-    players?: string[];
-    creatorId?: string;
-}
-
 const GamesPage = () => {
     const { data: session } = useSession();
     const [games, setGames] = useState<Game[]>([]);
@@ -114,6 +99,16 @@ const GamesPage = () => {
     const [selectedGame, setSelectedGame] = useState<Game | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState<boolean>(false);
+    const [editingGame, setEditingGame] = useState<Game | null>(null);
+
+    const filterGames = useCallback((games: Game[], date: Date | null) => {
+        if (showAll) {
+            setFilteredGames(games);
+        } else if (date) {
+            const filtered = games.filter(game => isSameDay(new Date(game.startDate), date));
+            setFilteredGames(filtered);
+        }
+    }, [showAll]);
 
     useEffect(() => {
         const fetchGames = async () => {
@@ -139,20 +134,11 @@ const GamesPage = () => {
         };
 
         fetchGames();
-    }, []);
+    }, [filterGames, selectedDate]);
 
     useEffect(() => {
         filterGames(games, selectedDate);
-    }, [selectedDate, showAll, games]);
-
-    const filterGames = useCallback((games: Game[], date: Date | null) => {
-        if (showAll) {
-            setFilteredGames(games);
-        } else if (date) {
-            const filtered = games.filter(game => isSameDay(new Date(game.startDate), date));
-            setFilteredGames(filtered);
-        }
-    }, [showAll]);
+    }, [selectedDate, showAll, games, filterGames]);
 
     const handleDateChange = (date: Date | null) => {
         setSelectedDate(date);
@@ -164,7 +150,6 @@ const GamesPage = () => {
     };
 
     const handleOpenModal = async (game: Game) => {
-        // Fetch detailed game info including players
         try {
             const response = await fetch(`/api/getGameDetails?id=${game.id}`);
             if (!response.ok) {
@@ -172,15 +157,25 @@ const GamesPage = () => {
             }
             const detailedGame = await response.json();
             console.log('Detailed game -> ', JSON.stringify(detailedGame, null, 2));
+
+            const participants = detailedGame.participants && Array.isArray(detailedGame.participants)
+                ? detailedGame.participants.map((p: any) => {
+                    console.log('Participant:', p); // Debugging line
+                    return p.users && p.users.name ? p.users.name : 'Unknown Player';
+                })
+                : [];
+
             setSelectedGame({
                 ...game,
-                players: detailedGame.participants.map((p: any) => p.users.name),
+                players: participants,
                 creatorId: detailedGame.creator_id,
             });
         } catch (error: any) {
             setError(error.message);
         }
     };
+
+
 
     const handleJoinGame = async () => {
         if (selectedGame && session && session.user && (session.user as any).id) {
@@ -238,9 +233,31 @@ const GamesPage = () => {
         }
     };
 
-
     const handleCloseSuccessModal = () => {
         setIsSuccessModalOpen(false);
+    };
+
+    const handleUpdateGame = async (updatedData: Partial<Game>) => {
+        if (!editingGame) return;
+        try {
+            const response = await fetch('/api/updateGame', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ ...editingGame, ...updatedData }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Error updating game');
+            }
+
+            const updatedGame = await response.json();
+            setGames(games.map(game => (game.id === updatedGame.id ? updatedGame : game)));
+            setEditingGame(null);
+        } catch (error: any) {
+            setError(error.message);
+        }
     };
 
     return (
@@ -364,7 +381,19 @@ const GamesPage = () => {
                                             DARSE DE BAJA
                                         </Button>
                                     </Box>
-                                )}
+                                )
+                            }
+                            {session?.user?.id === selectedGame.creatorId && (
+                                <Box display="flex" justifyContent="center" mt={2}>
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={() => setEditingGame(selectedGame)}
+                                    >
+                                        Editar partida
+                                    </Button>
+                                </Box>
+                            )}
                         </>
                     )}
                 </Box>
@@ -385,8 +414,24 @@ const GamesPage = () => {
                     </Button>
                 </Box>
             </Modal>
+            {editingGame && (
+                <Modal
+                    open={!!editingGame}
+                    onClose={() => setEditingGame(null)}
+                    aria-labelledby="edit-game-modal-title"
+                    aria-describedby="edit-game-modal-description"
+                >
+                    <Box sx={modalStyle}>
+                        <GameForm
+                            initialData={editingGame}
+                            onSubmit={handleUpdateGame}
+                        />
+                    </Box>
+                </Modal>
+            )}
         </Box>
     );
+
 }
 
 export default GamesPage;

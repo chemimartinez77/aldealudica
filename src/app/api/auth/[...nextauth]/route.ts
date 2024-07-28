@@ -84,25 +84,7 @@ const handler = NextAuth({
                 console.error('Error signing in:', error);
                 return false;
             }
-        },
-        // async signOut({ token }) {
-        //     // Registrar el evento de logout en la tabla user_login_history
-        //     try {
-        //         const { error: logoutHistoryError } = await supabase
-        //             .from('user_login_history')
-        //             .update({ logout_time: new Date() })
-        //             .eq('session_id', token.sessionId as string) // Utilizar sessionId para actualizar logout_time
-        //             .is('logout_time', null);
-
-        //         if (logoutHistoryError) {
-        //             console.error('Error updating logout time:', logoutHistoryError);
-        //         }
-        //         return true;
-        //     } catch (error) {
-        //         console.error('Error signing out:', error);
-        //         return false;
-        //     }
-        // },
+        }
     },
 });
 
