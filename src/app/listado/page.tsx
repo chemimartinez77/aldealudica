@@ -1,3 +1,4 @@
+// src\app\listado\page.tsx
 "use client"
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -100,6 +101,7 @@ const GamesPage = () => {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState<boolean>(false);
     const [editingGame, setEditingGame] = useState<Game | null>(null);
+    const [showErrorMessage, setShowErrorMessage] = useState(true);
 
     const filterGames = useCallback((games: Game[], date: Date | null) => {
         if (showAll) {
@@ -175,9 +177,10 @@ const GamesPage = () => {
         }
     };
 
-
-
     const handleJoinGame = async () => {
+        // Restablecer la visibilidad del mensaje de error
+        setShowErrorMessage(true);
+
         if (selectedGame && session && session.user && (session.user as any).id) {
             try {
                 const response = await fetch('/api/joinGame', {
@@ -199,13 +202,14 @@ const GamesPage = () => {
                 setSuccessMessage('Apuntado correctamente a la partida');
                 setIsSuccessModalOpen(true);
 
-                // Refresh game details to show the updated participant list
+                // Refrescar los detalles del juego para mostrar la lista actualizada de participantes
                 await handleOpenModal(selectedGame);
             } catch (error: any) {
                 setError(error.message);
             }
         }
     };
+
 
     const handleLeaveGame = async () => {
         if (selectedGame && session && session.user && (session.user as any).id) {
@@ -219,6 +223,10 @@ const GamesPage = () => {
                 });
 
                 if (!response.ok) {
+                    const errorData = await response.json();
+                    if (errorData.message) {
+                        throw new Error(errorData.message);
+                    }
                     throw new Error('Error leaving game');
                 }
 
@@ -279,7 +287,26 @@ const GamesPage = () => {
                 </Box>
             </Box>
             <Box width="80%" maxWidth={1200} mx="auto">
-                {error && <Typography color="error">{error}</Typography>}
+                {error && showErrorMessage && (
+                    <Box display="flex" alignItems="center" bgcolor="#f8d7da" color="#721c24" p={2} mb={2} borderRadius={4}>
+                        <Typography flex="1">
+                            {error}
+                        </Typography>
+                        <Button
+                            onClick={() => setShowErrorMessage(false)}
+                            style={{
+                                backgroundColor: 'transparent',
+                                border: 'none',
+                                color: '#721c24',
+                                fontSize: '1.5rem',
+                                cursor: 'pointer',
+                                padding: '0',
+                            }}
+                        >
+                            ×
+                        </Button>
+                    </Box>
+                )}
                 <Grid container spacing={2}>
                     {filteredGames.map((game) => (
                         <Grid item xs={12} sm={6} md={4} key={game.id}>

@@ -1,4 +1,4 @@
-// src/app/partidas/crear/page.tsx
+// src\app\partidas\crear\page.tsx
 "use client";
 
 import React, { useState, ChangeEvent } from 'react';
@@ -11,10 +11,10 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 import { styled } from '@mui/material/styles';
 import { useSession, getSession } from 'next-auth/react';
 import Image from 'next/image';
-
 
 interface GameResult {
     id: string;
@@ -53,6 +53,7 @@ const PartidasPage = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = event.target;
@@ -64,13 +65,13 @@ const PartidasPage = () => {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-    
+
         try {
             const session = await getSession(); // Obtiene la sesión del usuario
             if (!session) {
                 throw new Error('No user session found');
             }
-    
+
             const response = await fetch('/api/saveGame', {
                 method: 'POST',
                 headers: {
@@ -87,17 +88,20 @@ const PartidasPage = () => {
                     } // Incluye la sesión con nombre y correo electrónico
                 })
             });
-    
+
             if (!response.ok) {
                 throw new Error('Error saving game');
             }
-    
+
             const result = await response.json();
+            setSuccessMessage('Game saved successfully!');
+            setSuccessDialogOpen(true);
             console.log('Game saved:', result);
         } catch (error) {
+            setErrorMessage(`Error saving game: ${(error as Error).message}`);
             console.error('Error saving game:', error);
         }
-    };  
+    };
 
     const handleSearch = async () => {
         try {
@@ -115,6 +119,28 @@ const PartidasPage = () => {
 
     const closeDialog = () => {
         setDialogOpen(false);
+    };
+
+    const closeSuccessDialog = () => {
+        setSuccessDialogOpen(false);
+        setFormData({
+            game: '',
+            gameId: '',
+            title: '',
+            description: '',
+            startDate: '',
+            startTime: '',
+            endDate: '',
+            endTime: '',
+            participants: '',
+            participate: false,
+            location: '',
+            address: '',
+            authorization: false,
+        });
+        setSelectedGameImage(null);
+        setSuccessMessage(null);
+        setErrorMessage(null);
     };
 
     const handleGameClick = (id: string, name: string, imageUrl: string) => {
@@ -345,8 +371,20 @@ const PartidasPage = () => {
                     )}
                 </DialogContent>
             </Dialog>
+            <Dialog open={successDialogOpen} onClose={closeSuccessDialog} maxWidth="sm">
+                <DialogTitle>Partida creada</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1" gutterBottom>
+                        La partida se ha creado exitosamente.
+                    </Typography>
+                    <Button onClick={closeSuccessDialog} variant="contained">
+                        Cerrar
+                    </Button>
+                </DialogContent>
+            </Dialog>
         </Box>
     );
 };
 
 export default PartidasPage;
+

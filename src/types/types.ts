@@ -1,17 +1,30 @@
 // src/types/types.ts
+
 export interface Game {
-    id: string;
+    id?: string;
     game: string;
-    title: string;
-    participants: number;
-    participantCount: number;
     gameId: string;
-    imageUrl: string;
+    title: string;
+    description: string;
     startDate: string;
     startTime: string;
     endDate: string;
     endTime: string;
+    participants: string | number;
+    participate: boolean;
     location: string;
-    players?: string[];
-    creatorId?: string;
+    address: string;
+    authorization: boolean;
+}
+
+export interface GameResponse {
+    game: string;
+    title: string;
+    startDate: string;
+    startTime: string;
+    endDate: string;
+    endTime: string;
+    participants: string | number;
+    location: string;
+    address: string;
 }

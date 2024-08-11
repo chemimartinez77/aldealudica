@@ -1,19 +1,23 @@
 // src/pages/api/saveGame.ts
+// Este archivo maneja la lógica para guardar partidas en la base de datos, verificando la existencia del usuario por email.
+
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '../../utils/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'POST') {
-        const { formData, userId, session } = req.body;
-        console.log('Received form data:', formData, 'UserId:', userId, 'Session:', session);
+        const { formData, session } = req.body;
+        console.log('Received form data:', formData, 'Session:', session);
 
         try {
-            // Verifica si el usuario ya existe en la tabla 'users'
+            const { email, name } = session.user;
+
+            // Verifica si el usuario ya existe en la tabla 'users' por su email
             const { data: existingUser, error: userCheckError } = await supabase
                 .from('users')
                 .select('id, name, email')
-                .eq('external_id', userId)
+                .eq('email', email)
                 .single();
 
             console.log('User check result:', existingUser, 'Error:', userCheckError);
@@ -25,17 +29,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 res.status(500).json({ error: 'Error checking user' });
                 return;
             } else if (!existingUser) {
-                const { name, email } = session.user;
-
-                if (!name || !email) {
-                    res.status(400).json({ error: 'Missing user information' });
-                    return;
-                }
-
+                // Si no se encuentra el usuario, crearlo
                 uuidUserId = uuidv4();
                 const { error: userInsertError } = await supabase
                     .from('users')
-                    .insert({ id: uuidUserId, external_id: userId, name, email });
+                    .insert({ id: uuidUserId, email, name });
 
                 if (userInsertError) {
                     console.error('Error inserting user:', userInsertError);
@@ -49,10 +47,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 console.log('Existing user found with ID:', uuidUserId);
             }
 
+            // Añadir creatorId a los datos de la partida
+            const partidaDataToInsert = {
+                ...formData,
+                creatorid: uuidUserId
+            };
+
             // Inserta los datos del formulario en la tabla 'partidas'
             const { data: partidaData, error: partidaInsertError } = await supabase
                 .from('partidas')
-                .insert([formData])
+                .insert([partidaDataToInsert])
                 .select('id')
                 .single();
 

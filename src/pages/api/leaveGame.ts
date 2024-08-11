@@ -1,9 +1,15 @@
+// \src\pages\api\leaveGame.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '../../utils/supabaseClient';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'POST') {
         const { gameId, userId } = req.body;
+
+        // Agrega estos logs
+        console.log('Game ID:', gameId);
+        console.log('User ID:', userId);
+
         try {
             const { data, error } = await supabase
                 .from('partidas_have_users')
@@ -19,6 +25,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 throw error;
             }
 
+            console.log('Leave game data:', data);
+
             res.status(200).json(data);
         } catch (error) {
             console.error('Error in catch block:', error);
@@ -29,3 +37,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.status(405).json({ message: 'Method not allowed' });
     }
 }
+
