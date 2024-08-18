@@ -13,7 +13,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { format, isSameDay } from 'date-fns';
 import Button from '@mui/material/Button';
-import { Game } from '../../types/types';
+import { Game, Participant } from '../../types/types';
 import GameForm from '../../components/GameForm';
 
 // Define un botón personalizado
@@ -125,7 +125,12 @@ const GamesPage = () => {
                 const gamesWithImages = await Promise.all(data.map(async (game: Game) => {
                     const detailsResponse = await fetch(`../api/getGameDetails?gameId=${game.gameId}`);
                     const detailsData = await detailsResponse.json();
-                    return { ...game, imageUrl: detailsData.imageUrl, players: game.players || [] };
+                    return {
+                        ...game,
+                        imageUrl: detailsData.imageUrl,
+                        players: game.players || [],
+                        participantCount: game.players?.length || 0 // Si necesitas contar los jugadores
+                    };
                 }));
 
                 setGames(gamesWithImages);
@@ -153,29 +158,28 @@ const GamesPage = () => {
 
     const handleOpenModal = async (game: Game) => {
         try {
+            console.log('Cargamos la modal...');
             const response = await fetch(`/api/getGameDetails?id=${game.id}`);
             if (!response.ok) {
                 throw new Error('Error fetching game details');
             }
             const detailedGame = await response.json();
-            console.log('Detailed game -> ', JSON.stringify(detailedGame, null, 2));
+            console.log('Detailed game:', detailedGame);
 
-            const participants = detailedGame.participants && Array.isArray(detailedGame.participants)
-                ? detailedGame.participants.map((p: any) => {
-                    console.log('Participant:', p); // Debugging line
-                    return p.users && p.users.name ? p.users.name : 'Unknown Player';
-                })
-                : [];
+            const participants = detailedGame.participants || [];
 
+            // Aquí asignamos el número de participantes al game
             setSelectedGame({
                 ...game,
-                players: participants,
-                creatorId: detailedGame.creator_id,
+                participantCount: participants.length, // Establece el número de participantes
+                players: participants.map((p: Participant) => p.users.name),
+                creatorId: detailedGame.creatorid,
             });
         } catch (error: any) {
             setError(error.message);
         }
     };
+
 
     const handleJoinGame = async () => {
         // Restablecer la visibilidad del mensaje de error
@@ -246,14 +250,21 @@ const GamesPage = () => {
     };
 
     const handleUpdateGame = async (updatedData: Partial<Game>) => {
-        if (!editingGame) return;
+        if (!editingGame) {
+            console.error('No game selected for editing');
+            return;
+        }
+
         try {
+            // Combina datos de editingGame y updatedData para asegurarte de que estás enviando todo lo necesario
+            const updatedGameData = { ...editingGame, ...updatedData };
+
             const response = await fetch('/api/updateGame', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ ...editingGame, ...updatedData }),
+                body: JSON.stringify(updatedGameData),
             });
 
             if (!response.ok) {
@@ -261,12 +272,18 @@ const GamesPage = () => {
             }
 
             const updatedGame = await response.json();
+
+            // Actualiza la lista de juegos con los datos actualizados
             setGames(games.map(game => (game.id === updatedGame.id ? updatedGame : game)));
             setEditingGame(null);
+
+            // Opcional: puedes mostrar un mensaje de éxito aquí
         } catch (error: any) {
+            console.error('Error updating game:', error);
             setError(error.message);
         }
     };
+
 
     return (
         <Box display="flex" minHeight="100vh" py={4}>
@@ -308,33 +325,40 @@ const GamesPage = () => {
                     </Box>
                 )}
                 <Grid container spacing={2}>
-                    {filteredGames.map((game) => (
-                        <Grid item xs={12} sm={6} md={4} key={game.id}>
-                            <Box onClick={() => handleOpenModal(game)}>
-                                <GameCard>
-                                    <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" flex="1">
-                                        <Image
-                                            src={game.imageUrl || '/noimg.jpg'} // Usa la URL de la imagen obtenida
-                                            alt={game.game}
-                                            width={100}
-                                            height={100}
-                                            style={{ objectFit: 'contain' }}
-                                        />
-                                        <Typography variant="h6">{game.game}</Typography>
-                                        <Typography variant="body1">Nº Jugadores: {game.participantCount}/{game.participants}</Typography>
-                                        <Typography variant="body2">Inicio: {game.startDate} {game.startTime}</Typography>
-                                        <Typography variant="body2">Fin: {game.endDate} {game.endTime}</Typography>
-                                        {game.participantCount >= game.participants && (
-                                            <Typography sx={fullGameTextStyle}>
-                                                Partida completa
-                                            </Typography>
-                                        )}
-                                    </Box>
-                                </GameCard>
-                            </Box>
-                        </Grid>
-                    ))}
+                    {filteredGames.map((game) => {
+                        console.log('Current game:', game); // <-- Añadir esta línea para imprimir cada 'game' en la consola
+
+                        return (
+                            <Grid item xs={12} sm={6} md={4} key={game.id}>
+                                <Box onClick={() => handleOpenModal(game)}>
+                                    <GameCard>
+                                        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" flex="1">
+                                            <Image
+                                                src={game.imageUrl || '/noimg.jpg'} // Usa la URL de la imagen obtenida
+                                                alt={game.game}
+                                                width={100}
+                                                height={100}
+                                                style={{ objectFit: 'contain' }}
+                                            />
+                                            <Typography variant="h6">{game.game}</Typography>
+                                            <Typography variant="body1">Nº Jugadores: {game.participantes.length}/{game.participants}</Typography>
+                                            <Typography variant="body2">Inicio: {game.startDate} {game.startTime}</Typography>
+                                            <Typography variant="body2">Fin: {game.endDate} {game.endTime}</Typography>
+                                            {
+                                                Number(game.participantCount ?? 0) >= Number(game.participants) && (
+                                                    <Typography sx={fullGameTextStyle}>
+                                                        Partida completa
+                                                    </Typography>
+                                                )
+                                            }
+                                        </Box>
+                                    </GameCard>
+                                </Box>
+                            </Grid>
+                        );
+                    })}
                 </Grid>
+
             </Box>
             <Modal
                 open={!!selectedGame}
@@ -348,6 +372,10 @@ const GamesPage = () => {
                             <Typography id="game-modal-title" variant="h6" component="h2">
                                 {selectedGame.game}
                             </Typography>
+                            {/* Aquí se imprime la URL de la imagen para depurar */}
+                            {console.log('Image URL:', selectedGame.imageUrl)}
+                            {console.log('Creator ID:', selectedGame.creatorId)}
+                            {console.log('Session User ID:', session?.user?.id)}
                             <Box display="flex" justifyContent="center" mt={2} mb={2}>
                                 <Image
                                     src={selectedGame.imageUrl || '/noimg.jpg'}
@@ -376,15 +404,37 @@ const GamesPage = () => {
                                     ))
                                 ) : 'N/A'}
                             </ul>
-                            {(selectedGame.players?.length ?? 0) >= (selectedGame.participants ?? 0) && (
-                                <Typography sx={fullGameTextStyle}>
-                                    Partida completa
-                                </Typography>
-                            )}
-                            {session?.user?.id !== selectedGame.creatorId &&
+                            {
+                                (selectedGame.players?.length ?? 0) >= Number(selectedGame.participants ?? 0) && (
+                                    <Typography sx={fullGameTextStyle}>
+                                        Partida completa
+                                    </Typography>
+                                )
+                            }
+
+
+                            {console.log('Selected Game:', selectedGame)}
+                            {session?.user?.id === selectedGame.creatorId ? (
+                                <GameForm
+                                    initialData={{
+                                        startDate: selectedGame.startDate,
+                                        startTime: selectedGame.startTime,
+                                        endDate: selectedGame.endDate,
+                                        endTime: selectedGame.endTime,
+                                        participants: selectedGame.participants,
+                                        location: selectedGame.location,
+                                        address: selectedGame.address,
+                                        description: selectedGame.description,
+                                        gameId: selectedGame.gameId,
+                                        title: selectedGame.game,
+                                    }}
+                                    onSubmit={handleUpdateGame} // Asegúrate de que handleUpdateGame maneje correctamente la actualización
+                                />
+                            ) : (
+                                session?.user?.id !== selectedGame.creatorId &&
                                 session?.user?.name &&
                                 !selectedGame.players?.includes(session.user.name) &&
-                                (selectedGame.players?.length ?? 0) < (selectedGame.participants ?? 0) && (
+                                (selectedGame.players?.length ?? 0) < Number(selectedGame.participants ?? 0) && (
                                     <Box display="flex" justifyContent="center" mt={2}>
                                         <Button
                                             variant="contained"
@@ -394,7 +444,8 @@ const GamesPage = () => {
                                             QUIERO JUGAR
                                         </Button>
                                     </Box>
-                                )}
+                                )
+                            )}
 
                             {session?.user?.id !== selectedGame.creatorId &&
                                 session?.user?.name &&
@@ -410,21 +461,11 @@ const GamesPage = () => {
                                     </Box>
                                 )
                             }
-                            {session?.user?.id === selectedGame.creatorId && (
-                                <Box display="flex" justifyContent="center" mt={2}>
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        onClick={() => setEditingGame(selectedGame)}
-                                    >
-                                        Editar partida
-                                    </Button>
-                                </Box>
-                            )}
                         </>
                     )}
                 </Box>
             </Modal>
+
 
             <Modal
                 open={isSuccessModalOpen}

@@ -10,12 +10,18 @@ export interface Game {
     startTime: string;
     endDate: string;
     endTime: string;
+    participantes: string[];
     participants: string | number;
+    participantCount?: number; // Número de participantes actuales
     participate: boolean;
     location: string;
     address: string;
     authorization: boolean;
+    players?: string[]; // Lista de jugadores, puede ser opcional
+    imageUrl?: string; // URL de la imagen, puede ser opcional
+    creatorId?: string; // ID del creador de la partida
 }
+
 
 export interface GameResponse {
     game: string;
@@ -27,4 +33,11 @@ export interface GameResponse {
     participants: string | number;
     location: string;
     address: string;
+}
+
+export interface Participant {
+    user_id: string;
+    users: {
+        name: string;
+    };
 }

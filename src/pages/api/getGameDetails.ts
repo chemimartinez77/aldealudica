@@ -1,3 +1,5 @@
+// src\pages\api\getGameDetails.ts
+
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '../../utils/supabaseClient';
 import { parseString } from 'xml2js';
@@ -33,11 +35,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
     } else if (id) {
         try {
+            // Fetch the game details from the database
             const { data, error } = await supabase
                 .from('partidas')
-                .select('*')
+                .select('*')  // Asegúrate de que 'creator_id' esté seleccionado
                 .eq('id', id)
                 .single();
+
+            console.log('Game details from database:', data);
 
             if (error) {
                 return res.status(500).json({ error: error.message });
@@ -51,11 +56,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 .is('leave_date', null)
                 .not('join_date', 'is', null);
 
+            console.log('Participants from database:', participants);
+
             if (participantsError) {
                 throw participantsError;
             }
 
-            res.status(200).json({ ...data, participants });
+            // Fetch the image URL from BoardGameGeek
+            const imageUrl = await fetchGameDetailsFromBGG(data.gameId);
+
+            // Return all the details together
+            res.status(200).json({
+                ...data,
+                imageUrl,
+                participants,
+                creatorId: data.creatorId  // Ensure creatorId is included
+            });
         } catch (error) {
             console.error('Error fetching partida details:', error);
             res.status(500).json({ error: 'Failed to fetch partida details' });
