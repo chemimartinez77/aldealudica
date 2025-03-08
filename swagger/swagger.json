@@ -1,0 +1,45 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "version": "1.0.0",
+      "title": "Aldea Ludica API",
+      "description": "Documentación de la API para el proyecto Aldea Ludica"
+    },
+    "host": "yourdomain.com",
+    "basePath": "/api",
+    "schemes": [
+      "https"
+    ],
+    "paths": {
+      "/auth/register": {
+        "post": {
+          "summary": "Registrar un nuevo usuario",
+          "parameters": [
+            {
+              "name": "body",
+              "in": "body",
+              "description": "Objeto usuario",
+              "schema": {
+                "$ref": "#/definitions/User"
+              }
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": "Usuario registrado exitosamente"
+            }
+          }
+        }
+      }
+    },
+    "definitions": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "name": { "type": "string" }
+        }
+      }
+    }
+  }
+  
