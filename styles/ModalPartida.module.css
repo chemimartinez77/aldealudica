@@ -1,0 +1,302 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5); /* fondo negro semiopaco */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    background: #f8fafc; /* un gris claro */
+    padding: 20px;
+    border-radius: 8px;
+    width: 900px;
+    max-width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+/* Encabezado principal */
+.modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+/* Estilos del formulario */
+.modal-content form {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* dos columnas */
+    gap: 1rem;
+}
+
+/* Cada bloque de campo a su línea */
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Etiquetas */
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+/* Inputs, selects, textareas */
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 0.4rem;
+    border: 1px solid #cbd5e1; /* gris clarito */
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+/* Para campos más grandes que abarcan 2 columnas */
+.col-span-2 {
+    grid-column: span 2;
+}
+
+/* Botones */
+.modal-actions {
+    margin-top: 1rem;
+    grid-column: span 2;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.modal-actions button {
+    background: #2b6cb0;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.modal-actions button:hover {
+    background: #2c5282;
+}
+
+.modal-actions .cancel-button {
+    background: #a0aec0;
+    color: #1a202c;
+}
+
+.modal-actions .cancel-button:hover {
+    background: #718096;
+}
+
+.modal-actions .delete-button {
+    background: #e53e3e;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.modal-actions .delete-button:hover {
+    background: #c53030;
+}
+
+.search-results-popover {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ccc;
+    z-index: 10;
+    padding: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.search-result-item:hover {
+    background: #f0f0f0;
+}
+
+.game-cover {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.game-info span {
+    display: block;
+    font-size: 0.9rem;
+}
+
+/* Imagen del juego seleccionado (máx. 80x80) */
+.selected-game-cover {
+    max-width: 80px;
+    max-height: 80px;
+    width: auto;
+    height: auto;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer; /* Para indicar que se puede hacer click y ver en grande */
+}
+
+/* ---- NUEVAS CLASES PARA LUPA DENTRO DEL INPUT ---- */
+
+/* Contenedor general para el input y la imagen del juego */
+.search-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Contenedor relativo para posicionar la lupa */
+.search-input-container {
+    position: relative;
+    flex: 1; /* que ocupe todo el espacio disponible */
+}
+
+/* El input deja espacio a la derecha para la lupa */
+.search-input {
+    width: 100%;
+    padding-right: 2rem; /* espacio para la lupa */
+    box-sizing: border-box;
+}
+
+/* La lupa (icono) se posiciona dentro del input */
+.search-icon {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #888; /* ajusta si quieres otro color */
+}
+
+.popover-overlay {
+    position: fixed;       /* Cubre toda la ventana */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5); /* Sombra semitransparente */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;         /* Por encima de la modal principal */
+  }
+  
+  .popover-content {
+    background: #fff;
+    padding: 1.5rem 2rem;
+    border-radius: 8px;
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .popover-content .cancel-button {
+    background: #a0aec0;
+    color: #1a202c;
+  }
+
+  .popover-content .cancel-button:hover {
+    background: #718096;
+  }
+  
+  .modal-header {
+    background-color: #0c3f7a;  /* azul oscuro, ajústalo a tu gusto */
+    color: #fff;               /* texto en blanco */
+    padding: 12px 16px;        /* un poco de relleno */
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    font-size: 18px;           /* tamaño de fuente */
+    margin-bottom: 10px;
+  }
+  
+  /* Para que el <h2> no tenga margen extra */
+  .modal-header h2 {
+    margin: 0;                
+    text-align: center;        /* centrar el título, si deseas */
+  }
+
+  .delete-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  
+  .delete-content {
+    background: #fff;
+    padding: 1.5rem 2rem;
+    border-radius: 8px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+  }
+
+  .delete-content .delete-buttons {
+    display: flex;
+    justify-content: center; /* <-- centra horizontalmente */
+    gap: 1rem;               /* separación entre botones */
+    margin-top: 1rem;
+  }
+  
+  /* Botón "Aceptar" (rojo) */
+  .delete-content .delete-confirm-button {
+    background-color: #dc3545; 
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  /* Hover en botón "Aceptar" */
+  .delete-content .delete-confirm-button:hover {
+    background-color: #c53041; /* un rojo más oscuro */
+  }
+  
+  /* Botón "Cancelar" (gris) */
+  .delete-content .delete-cancel-button {
+    background-color: #6c757d;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  /* Hover en botón "Cancelar" */
+  .delete-content .delete-cancel-button:hover {
+    background-color: #5a6268; /* un gris más oscuro */
+  }
+  

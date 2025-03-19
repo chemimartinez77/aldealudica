@@ -1,0 +1,49 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 999;
+}
+
+.modal-content {
+  position: relative;
+  background-color: #fff;
+  width: 400px;
+  max-width: 90%;
+  margin: 100px auto;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.results-container {
+  max-height: 300px; /* Scroll si hay muchos resultados */
+  overflow-y: auto;
+}
+
+/* Cada resultado en la lista */
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #ddd;
+}
+
+.result-item:hover {
+  background-color: #d0e0ff; /* azul clarito */
+}
+
+/* Imagen a la izquierda del nombre */
+.result-image {
+  max-width: 40px;
+  max-height: 40px;
+  width: auto;
+  height: auto;
+  object-fit: cover;
+  border-radius: 4px;
+}
