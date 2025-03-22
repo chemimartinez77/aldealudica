@@ -44,6 +44,9 @@ export default async function handler(req, res) {
         });
 
         // Construir URL de verificación
+        if (!process.env.NEXT_PUBLIC_APP_URL) {
+            throw new Error("NEXT_PUBLIC_APP_URL no está configurado");
+        }
         const verifyUrl = `${
             process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
         }/verify?token=${verificationToken}`;
