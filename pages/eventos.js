@@ -62,8 +62,6 @@ export default function Eventos() {
 
     // Al hacer clic en un evento (partida)
     const handleEventClick = (partida) => {
-        console.log("-> partida.creatorId: " + partida.creatorId);
-        console.log("-> currentUserId: " + currentUserId);
         if (!currentUserId) {
             // No logado => solo ver
             setModalMode("view");
@@ -74,7 +72,6 @@ export default function Eventos() {
             // Logado pero no eres creador => modo join
             setModalMode("join");
         }
-        console.log("-> Mode: " + modalMode);
         setSelectedPartida(partida);
         setModalOpen(true);
     };
@@ -84,10 +81,15 @@ export default function Eventos() {
         // Llamada al backend para crear o editar
         // Si newPartida tiene un id, es edición; si no, es creación
         const method = newPartida.id ? "PUT" : "POST";
+        const payload = { ...newPartida };
+        if (!newPartida.id) {
+            delete payload.id; // Elimina el id si es creación
+        }
+
         fetch("/api/partidas", {
             method,
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newPartida),
+            body: JSON.stringify(payload),
         })
             .then((res) => res.json())
             .then((saved) => {

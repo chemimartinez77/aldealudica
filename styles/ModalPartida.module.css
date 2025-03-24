@@ -12,14 +12,16 @@
 }
 
 .modal-content {
-    background: #f8fafc; /* un gris claro */
+    background: #f8fafc;
     padding: 20px;
     border-radius: 8px;
     width: 900px;
     max-width: 95%;
-    max-height: 90vh;
+    max-height: 95vh; /* <--- Aumentado */
     overflow-y: auto;
     position: relative;
+    display: flex;          /* <--- Añadido */
+    flex-direction: column; /* <--- Añadido */
 }
 
 /* Encabezado principal */
@@ -112,12 +114,13 @@
     background: #c53030;
 }
 
+/* Contenedor de resultados de búsqueda (modal flotante con scroll largo) */
 .search-results-popover {
     position: absolute;
     top: calc(100% + 0.5rem);
     left: 0;
     width: 100%;
-    max-height: 300px;
+    max-height: 70vh;  /* <--- Aumentado */
     overflow-y: auto;
     background: #fff;
     border: 1px solid #ccc;
@@ -298,5 +301,43 @@
   /* Hover en botón "Cancelar" */
   .delete-content .delete-cancel-button:hover {
     background-color: #5a6268; /* un gris más oscuro */
+  }
+  
+  .spinner {
+    border: 2px solid #ccc;
+    border-top: 2px solid #007bff;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 0.8s linear infinite;
+    margin-left: 0.5rem;
+    cursor: default;
+  }
+  
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .read-only-info {
+    text-align: center;
+    padding: 1rem;
+  }
+  
+  .read-only-info img {
+    max-width: 200px;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    cursor: pointer;
+  }
+  
+  .read-only-info p {
+    text-align: left;
+    margin: 0.25rem 0;
   }
   

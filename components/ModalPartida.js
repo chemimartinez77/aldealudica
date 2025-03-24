@@ -31,6 +31,7 @@ export default function ModalPartida({
     const [gameSearch, setGameSearch] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [showSearchModal, setShowSearchModal] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
 
     // Juego seleccionado
     const [selectedGame, setSelectedGame] = useState("");
@@ -105,6 +106,7 @@ export default function ModalPartida({
 
         // Juego
         setSelectedGame(partida.game || "");
+        setGameSearch(partida.game || "");
         if (partida.gameDetails) {
             setSelectedGameDetails(partida.gameDetails);
         }
@@ -123,6 +125,9 @@ export default function ModalPartida({
                 .then((data) => {
                     if (data.partida) {
                         setParticipants(data.partida.participants);
+                        if (data.partida.gameDetails) {
+                            setSelectedGameDetails(data.partida.gameDetails);
+                        }
                     }
                 })
                 .catch((err) => console.error(err));
@@ -144,6 +149,7 @@ export default function ModalPartida({
             alert("Escribe al menos 3 caracteres para buscar.");
             return;
         }
+        setIsSearching(true); // Spinner ON
         try {
             const res = await fetch(
                 `/api/search-bgg?query=${encodeURIComponent(gameSearch)}`
@@ -156,13 +162,15 @@ export default function ModalPartida({
             }
             const uniqueResults = Array.from(
                 new Map(data.results.map((item) => [item.id, item])).values()
-            ).slice(0, 15);
+            );
 
             setSearchResults(uniqueResults);
             setShowSearchModal(true);
         } catch (err) {
             console.error(err);
             setSearchResults([]);
+        } finally {
+            setIsSearching(false); // Spinner OFF
         }
     }
 
@@ -279,6 +287,7 @@ export default function ModalPartida({
             creatorId: currentUserId,
             participants,
         };
+        console.log("selectedGameDetails: ", selectedGameDetails);
         onSave(newPartida);
     }
 
@@ -303,8 +312,16 @@ export default function ModalPartida({
 
     // Render de info en solo lectura (para view/join)
     function renderReadOnlyInfo() {
+        console.log("Detalles del juego:", selectedGameDetails);
         return (
             <div className={styles["read-only-info"]}>
+                {selectedGameDetails?.image && (
+                    <img
+                        src={selectedGameDetails.image}
+                        alt={selectedGameDetails.name}
+                        onClick={() => setShowImagePreview(true)}
+                    />
+                )}
                 <p>
                     <strong>Título:</strong> {title}
                 </p>
@@ -327,7 +344,7 @@ export default function ModalPartida({
             </div>
         );
     }
-
+            
     const isFormMode = mode === "create" || mode === "edit";
     const isReadOnlyMode = mode === "view" || mode === "join";
 
@@ -705,6 +722,38 @@ export default function ModalPartida({
                                 >
                                     Cancelar
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {isSearching && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                        <div className="bg-blue-100 p-6 rounded-lg text-center shadow-lg">
+                            <p className="text-lg font-semibold text-gray-800">
+                                Accediendo a la biblioteca de juegos...
+                            </p>
+                            <div className="mt-4">
+                                <svg
+                                    className="animate-spin h-8 w-8 text-blue-600 mx-auto"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8v8H4z"
+                                    ></path>
+                                </svg>
                             </div>
                         </div>
                     </div>

@@ -1,27 +1,30 @@
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.5);
-  z-index: 999;
-}
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;    /* centro vertical */
+    justify-content: center; /* centro horizontal */
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+  
 
 .modal-content {
-  position: relative;
-  background-color: #fff;
-  width: 400px;
-  max-width: 90%;
-  margin: 100px auto;
-  padding: 1rem;
-  border-radius: 8px;
-}
+    background-color: #fff;
+    width: 500px;                 /* un poco más ancha */
+    max-width: 90%;
+    max-height: 80vh;            /* más altura visible */
+    overflow-y: auto;            /* scroll si hay muchos resultados */
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  }
+  
 
-.results-container {
-  max-height: 300px; /* Scroll si hay muchos resultados */
-  overflow-y: auto;
-}
+  .results-container {
+    max-height: 60vh;        /* más altura para la lista de juegos */
+    overflow-y: auto;
+  }
 
 /* Cada resultado en la lista */
 .result-item {
