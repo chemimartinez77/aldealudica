@@ -31,6 +31,7 @@ export default async function handler(req, res) {
         id,
         title,
         game,
+        gameDetails,
         description,
         date,
         startTime,
@@ -55,6 +56,7 @@ export default async function handler(req, res) {
 
       partida.title = title;
       partida.game = game;
+      partida.gameDetails = gameDetails || null;
       partida.description = description;
       partida.date = date;
       partida.startTime = startTime;
@@ -65,6 +67,7 @@ export default async function handler(req, res) {
       partida.creatorId = creatorObjectId;
 
       await partida.save();
+      const partidaActualizada = await Partida.findOne({ id: partida.id });
 
       // Enviar notificación push para actualización
       const subscriptions = await Subscription.find({});
@@ -80,7 +83,8 @@ export default async function handler(req, res) {
         }
       });
 
-      return res.status(200).json({ partida });
+      //return res.status(200).json({ partida });
+      return res.status(200).json({ partida: partidaActualizada });
     } catch (error) {
       console.error(error);
       return res
@@ -90,10 +94,12 @@ export default async function handler(req, res) {
   }
 
   if (req.method === "POST") {
+    console.log("Body recibido en POST:", req.body);
     try {
       const {
         title,
         game,
+        gameDetails,
         description,
         date,
         startTime,
@@ -114,6 +120,7 @@ export default async function handler(req, res) {
       const nuevaPartida = new Partida({
         title,
         game,
+        gameDetails: gameDetails || null,
         description,
         date,
         startTime,
@@ -128,8 +135,8 @@ export default async function handler(req, res) {
       if (creatorParticipates) {
         nuevaPartida.participants.push(creatorObjectId);
       }
-
       await nuevaPartida.save();
+      const partidaGuardada = await Partida.findOne({ id: nuevaPartida.id });
 
       // Enviar notificación push para nueva partida
       const subscriptions = await Subscription.find({});
@@ -145,7 +152,8 @@ export default async function handler(req, res) {
         }
       });
 
-      return res.status(200).json({ partida: nuevaPartida });
+      //return res.status(200).json({ partida: nuevaPartida });
+      return res.status(200).json({ partida: partidaGuardada });
     } catch (error) {
       console.error(error);
       return res.status(500).json({ error: "Error al crear la partida" });

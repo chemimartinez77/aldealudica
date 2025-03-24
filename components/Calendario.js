@@ -4,7 +4,8 @@ import { parse, startOfWeek, getDay, format } from "date-fns";
 import es from "date-fns/locale/es";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Icon } from "@chakra-ui/react"; // Para el icono de WhatsApp
-import { FaWhatsapp } from "react-icons/fa"; // Icono de WhatsApp
+import { FaWhatsapp, FaInfoCircle } from "react-icons/fa"; // Icono de WhatsApp y de info
+import { useState } from "react";
 
 const locales = { es };
 const localizer = dateFnsLocalizer({
@@ -16,16 +17,20 @@ const localizer = dateFnsLocalizer({
 });
 
 // Componente personalizado para renderizar cada evento
-const EventWithWhatsApp = ({ event }) => {
-    // Datos del evento
-    const { title, start, end, location } = event;
+const EventWithWhatsApp = ({ event, view }) => {
+    const { title, start, end, location, gameDetails } = event;
+
+    // Solo decoramos en la vista agenda
+    if (view !== "agenda") {
+        return <span>{title}</span>;
+    }
 
     // Formatear la fecha y hora para el mensaje
-    const date = format(start, "dd 'de' MMMM 'de' yyyy", { locale: es }); // Ejemplo: "22 de marzo de 2025"
-    const startTime = format(start, "HH:mm", { locale: es }); // Ejemplo: "18:00"
-    const endTime = format(end, "HH:mm", { locale: es }); // Ejemplo: "20:00"
+    const date = format(start, "dd 'de' MMMM 'de' yyyy", { locale: es });
+    const startTime = format(start, "HH:mm", { locale: es });
+    const endTime = format(end, "HH:mm", { locale: es });
 
-    // Crear el mensaje predefinido para WhatsApp
+    // Crear mensaje de WhatsApp
     const message =
         `¡Hola! ¿Te unes a la partida?%0A` +
         `Nombre: ${encodeURIComponent(title.split(" - ")[0])}%0A` +
@@ -34,15 +39,45 @@ const EventWithWhatsApp = ({ event }) => {
         `Lugar: ${encodeURIComponent(location || "No especificado")}%0A` +
         `Únete al grupo para más detalles: https://chat.whatsapp.com/Edclf0FcRLZAk1KjeyniWw`;
 
-    // Enlace de WhatsApp para abrir la pantalla de selección de contactos
     const whatsappLink = `https://api.whatsapp.com/send?text=${message}`;
 
     return (
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span>{title}</span>
-            <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+            {gameDetails?.image && (
+                <img
+                    src={gameDetails.image}
+                    alt="Portada del juego"
+                    style={{
+                        width: "64px",
+                        height: "auto",
+                        borderRadius: "4px",
+                        objectFit: "cover",
+                    }}
+                />
+            )}
+            <span style={{ fontWeight: 500 }}>{title}</span>
+            <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Compartir por WhatsApp"
+            >
                 <Icon as={FaWhatsapp} color="green.500" boxSize={5} />
             </a>
+            <span
+                title="Más info"
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    color: "#3182ce",
+                    cursor: "pointer",
+                    fontSize: "0.8rem",
+                }}
+            >
+                <FaInfoCircle style={{ fontSize: "0.9rem" }} />
+                +info
+            </span>
         </div>
     );
 };
@@ -53,6 +88,7 @@ export default function Calendario({
     onEventClick,
     isLoggedIn,
 }) {
+    const [currentView, setCurrentView] = useState("month");
     // Ejemplo: convertir tus partidas a `events`
     const events = partidas
         .filter((p) => p.date && p.startTime && p.endTime)
@@ -60,7 +96,7 @@ export default function Calendario({
             ...p,
             start: new Date(`${p.date}T${p.startTime}`),
             end: new Date(`${p.date}T${p.endTime}`),
-            title: `${p.title} - ${p.startTime}–${p.endTime}`,
+            title: p.title,
         }));
 
     // Configurar props del calendario según el login
@@ -81,6 +117,7 @@ export default function Calendario({
             day: "Día",
             agenda: "Agenda",
         },
+        onView: (view) => setCurrentView(view),
         formats: {
             // Nombres de los días en el encabezado de la vista Semana/Día
             weekdayFormat: (date, culture, loc) =>
@@ -148,7 +185,7 @@ export default function Calendario({
 
         // Añadir el componente personalizado para los eventos
         components: {
-            event: EventWithWhatsApp,
+            event: (props) => <EventWithWhatsApp {...props} view={currentView} />,
         },
     };
 

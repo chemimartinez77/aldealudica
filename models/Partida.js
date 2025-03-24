@@ -5,6 +5,10 @@ const PartidaSchema = new mongoose.Schema({
   id: { type: String, unique: true },
   title: String,
   game: String,
+  gameDetails: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null,
+  },
   description: String,
   date: String, // "YYYY-MM-DD"
   startTime: String, // "HH:mm"
