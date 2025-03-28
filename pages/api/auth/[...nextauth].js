@@ -1,8 +1,11 @@
+// pages/api/auth/[...nextauth].js
 import NextAuth from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import dbConnect from "../../../lib/dbConnect";
 import User from "../../../models/User";
 import nodemailer from "nodemailer";
+import bcrypt from "bcryptjs";
 
 export default NextAuth({
   providers: [
@@ -10,66 +13,66 @@ export default NextAuth({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
+    CredentialsProvider({
+      name: "Email y contraseña",
+      credentials: {
+        email: { label: "Correo electrónico", type: "text" },
+        password: { label: "Contraseña", type: "password" },
+      },
+      async authorize(credentials) {
+        await dbConnect();
+        const { email, password } = credentials;
+
+        const user = await User.findOne({ email });
+        if (!user || !user.password) throw new Error("Credenciales inválidas");
+        if (!user.verified) throw new Error("Tu cuenta aún no está verificada");
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) throw new Error("Credenciales inválidas");
+
+        return {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+        };
+      },
+    }),
   ],
   session: {
     strategy: "jwt",
   },
   callbacks: {
-    /**
-     * 1) signIn:
-     *    - Se ejecuta al hacer login con Google (u otro proveedor).
-     *    - Normalmente se devuelve `true` o `false` para permitir o denegar el acceso.
-     *    - Aquí aprovechamos para crear o actualizar el usuario en nuestra BD
-     *      y sobrescribir user.id con doc._id.toString().
-     */
-    async signIn({ user }) {
-      // user => { id (googleId), name, email, image, ... }
+    async signIn({ user, account }) {
+      if (account.provider === "google") {
+        await dbConnect();
 
-      await dbConnect();
-
-      // Buscar por googleId
-      let doc = await User.findOne({ googleId: user.id });
-      if (!doc) {
-        // Si no existe por googleId, buscar por email
-        doc = await User.findOne({ email: user.email });
+        let doc = await User.findOne({ googleId: user.id });
         if (!doc) {
-          // No existe => crear
-          doc = await User.create({
-            email: user.email,
-            name: user.name,
-            password: null,
-            verified: true,
-            googleId: user.id, // asignar googleId
-          });
-          await sendWelcomeEmail(user.email, user.name);
-        } else {
-          // Existe por email => asignar googleId
-          doc.googleId = user.id;
-          await doc.save();
+          doc = await User.findOne({ email: user.email });
+          if (!doc) {
+            doc = await User.create({
+              email: user.email,
+              name: user.name,
+              password: null,
+              verified: true,
+              googleId: user.id,
+            });
+            await sendWelcomeEmail(user.email, user.name);
+          } else {
+            doc.googleId = user.id;
+            await doc.save();
+          }
         }
+
+        user.id = doc._id.toString();
+        user.name = doc.name;
+        user.email = doc.email;
       }
 
-      // Sobrescribimos user.id con el _id de Mongo (string)
-      user.id = doc._id.toString();
-
-      // Opcionalmente, también podemos actualizar user.name / user.email 
-      // con lo que haya en doc
-      user.name = doc.name;
-      user.email = doc.email;
-
-      // Retornamos `true` para permitir el login
       return true;
     },
 
-    /**
-     * 2) jwt:
-     *    - Se llama cada vez que se crea o actualiza el token JWT en el servidor.
-     *    - 'user' solo estará definido la primera vez que el usuario se loguea.
-     *      Después vendrá undefined, y solo tendremos 'token'.
-     *    - Copiamos lo que nos interese (id, name, email...) del 'user' al 'token'.
-     */
     async jwt({ token, user }) {
-      // Si user existe, significa que es la primera vez (login o refresh tras signIn)
       if (user) {
         token.id = user.id;
         token.name = user.name;
@@ -78,11 +81,6 @@ export default NextAuth({
       return token;
     },
 
-    /**
-     * 3) session:
-     *    - Se llama cada vez que se consulta la sesión (useSession() o getSession()).
-     *    - Copiamos del token a session.user para que en el front tengamos session.user.id.
-     */
     async session({ session, token }) {
       if (token?.id) {
         session.user.id = token.id;

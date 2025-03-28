@@ -1,4 +1,4 @@
-// login.js
+// pages/login.js
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -7,47 +7,96 @@ export default function LoginPage() {
     const { data: session } = useSession();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
 
-    // Si el usuario ya está autenticado, redirigirlo a la página principal
     useEffect(() => {
         if (session) {
             router.push("/");
         }
     }, [session, router]);
 
-    // Manejar inicio de sesión con Google
-    const handleLogin = async () => {
-        setLoading(true);
+    // Login con Google
+    const handleGoogleLogin = async () => {
+        setGoogleLoading(true);
         await signIn("google");
+    };
+
+    // Login con email/contraseña
+    const handleManualLogin = async (e) => {
+        e.preventDefault();
+        setError("");
+        setLoading(true);
+
+        const res = await signIn("credentials", {
+            redirect: false,
+            email,
+            password,
+        });
+
+        setLoading(false);
+
+        if (res.error) {
+            setError("Credenciales inválidas o usuario no verificado.");
+        } else {
+            router.push("/");
+        }
     };
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-            <div className="bg-white p-6 rounded-lg shadow-md text-center relative">
+            <div className="bg-white p-6 rounded-lg shadow-md text-center relative w-full max-w-sm">
                 <h1 className="text-2xl font-bold mb-4">Iniciar sesión</h1>
 
-                {/* Botón Google Estilizado */}
+                <form onSubmit={handleManualLogin} className="space-y-4">
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Correo electrónico"
+                        className="w-full border border-gray-300 rounded px-3 py-2"
+                        required
+                    />
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Contraseña"
+                        className="w-full border border-gray-300 rounded px-3 py-2"
+                        required
+                    />
+                    <button
+                        type="submit"
+                        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+                        disabled={loading}
+                    >
+                        {loading ? "Accediendo..." : "Entrar"}
+                    </button>
+                    {error && <p className="text-red-600 text-sm">{error}</p>}
+                </form>
+
+                <div className="my-4 border-t border-gray-300"></div>
+
                 <button
-                    onClick={handleLogin}
-                    className="flex items-center justify-center w-64 bg-white border border-gray-300 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 py-3"
-                    disabled={loading}
+                    onClick={handleGoogleLogin}
+                    className="flex items-center justify-center w-full bg-white border border-gray-300 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 py-3"
+                    disabled={googleLoading}
                 >
-                    {/* Logo de Google */}
                     <img
                         src="/googlelogo.svg"
                         alt="Google Logo"
                         className="h-6 w-6 mr-3"
                     />
-
-                    {/* Texto */}
                     <span className="text-gray-700 font-medium">
                         Acceder con Google
                     </span>
                 </button>
             </div>
 
-            {/* Modal de carga cuando se hace login */}
-            {loading && (
+            {/* Modal de carga al hacer login */}
+            {(loading || googleLoading) && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="bg-blue-100 p-6 rounded-lg text-center shadow-lg">
                         <p className="text-lg font-semibold text-gray-800">
