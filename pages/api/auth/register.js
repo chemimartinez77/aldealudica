@@ -12,11 +12,11 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: "Método no permitido" });
     }
 
-    const { email, name } = req.body;
-    if (!email || !name) {
+    const { email, name, password } = req.body;
+    if (!email || !name || !password) {
         return res
             .status(400)
-            .json({ error: "Faltan datos requeridos (email o name)." });
+            .json({ error: "Faltan datos requeridos o son incorrectos." });
     }
 
     try {
@@ -27,8 +27,9 @@ export default async function handler(req, res) {
         }
 
         // Generar una contraseña temporal (opcional)
-        const tempPassword = Math.random().toString(36).slice(-8);
-        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+        // const tempPassword = Math.random().toString(36).slice(-8);
+        // const hashedPassword = await bcrypt.hash(tempPassword, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         // Generar un token de verificación seguro
         const verificationToken = crypto.randomBytes(32).toString("hex");
@@ -38,7 +39,7 @@ export default async function handler(req, res) {
             email,
             name,
             password: hashedPassword,
-            temporaryPassword: true,
+            temporaryPassword: false,
             verified: false,
             verificationToken,
         });
@@ -47,9 +48,7 @@ export default async function handler(req, res) {
         if (!process.env.NEXT_PUBLIC_APP_URL) {
             throw new Error("NEXT_PUBLIC_APP_URL no está configurado");
         }
-        const verifyUrl = `${
-            process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-        }/verify?token=${verificationToken}`;
+        const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify?token=${verificationToken}`;
 
         // Verificar que las variables de entorno están definidas
         if (

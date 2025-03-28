@@ -1,8 +1,8 @@
-// pages/verify-success.js
+// pages/verify-invalid.js
 import { Box, Heading, Text, Button, VStack } from "@chakra-ui/react";
 import Link from "next/link";
 
-export default function VerifySuccessPage() {
+export default function VerifyInvalidPage() {
   return (
     <Box
       minH="100vh"
@@ -12,12 +12,12 @@ export default function VerifySuccessPage() {
       justifyContent="center"
     >
       <VStack spacing={6} p={8} bg="white" rounded="md" shadow="lg">
-        <Heading color="green.500">¡Bienvenido a la Aldea Lúdica!</Heading>
+        <Heading color="red.500">Token inválido</Heading>
         <Text fontSize="lg" textAlign="center">
-          Tu cuenta ha sido verificada con éxito. Ya puedes iniciar sesión.
+          El enlace de verificación no es válido o ya fue usado.
         </Text>
-        <Link href="/login" passHref>
-          <Button colorScheme="green">Iniciar sesión</Button>
+        <Link href="/" passHref>
+          <Button colorScheme="red">Volver al inicio</Button>
         </Link>
       </VStack>
     </Box>

@@ -11,25 +11,27 @@ export default async function handler(req, res) {
 
   const { token } = req.query;
   if (!token) {
-    return res.status(400).json({ error: 'No se proporcionó un token de verificación.' });
+    return res.redirect('/verify-invalid');
   }
 
   try {
-    // Buscar al usuario con ese token
     const user = await User.findOne({ verificationToken: token });
+
     if (!user) {
-      return res.status(400).json({ error: 'Token inválido o el usuario no existe.' });
+      return res.redirect('/verify-invalid');
     }
 
-    // Marcar como verificado y limpiar el token
+    if (user.verified) {
+      return res.redirect('/verify-already');
+    }
+
     user.verified = true;
     user.verificationToken = undefined;
     await user.save();
 
-    // Redirigir a una página de "verificación exitosa"
-    // Por ejemplo, /verify-success (puede ser una página de Next.js)
     return res.redirect('/verify-success');
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    console.error("Error al verificar usuario:", error);
+    return res.redirect('/verify-error');
   }
 }
