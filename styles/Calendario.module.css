@@ -1,0 +1,20 @@
+/* styles/Calendario.module.css */
+.calendarContainer {
+    height: 80vh;
+  }
+  
+  @media (max-width: 600px) {
+    .calendarContainer {
+      height: 60vh;
+      font-size: 0.8rem;
+    }
+  }
+  
+  @media (max-width: 500px) {
+ 
+    /* Imagen del juego más pequeña en móviles */
+    .gameThumbnail {
+      width: 48px !important;
+    }
+  }
+  

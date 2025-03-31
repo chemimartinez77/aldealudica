@@ -6,6 +6,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Icon } from "@chakra-ui/react"; // Para el icono de WhatsApp
 import { FaWhatsapp, FaInfoCircle } from "react-icons/fa"; // Icono de WhatsApp y de info
 import { useState } from "react";
+import styles from "../styles/Calendario.module.css";
 
 const locales = { es };
 const localizer = dateFnsLocalizer({
@@ -47,6 +48,7 @@ const EventWithWhatsApp = ({ event, view }) => {
                 <img
                     src={gameDetails.image}
                     alt="Portada del juego"
+                    className={styles.gameThumbnail}
                     style={{
                         width: "64px",
                         height: "auto",
@@ -80,6 +82,66 @@ const EventWithWhatsApp = ({ event, view }) => {
             </span>
         </div>
     );
+};
+
+const CustomAgendaDateCell = ({ day }) => {
+    if (!(day instanceof Date) || isNaN(day.getTime())) {
+        return <span>Fecha inválida</span>;
+    }
+
+    const capitalizar = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+    const raw = format(day, "EEEE d MMMM", { locale: es });
+    const partes = raw.split(" ");
+    const capitalizadas = partes.map((p) =>
+        isNaN(Number(p)) ? capitalizar(p) : p
+    );
+    const [diaSemana, diaMes, nombreMes] = capitalizadas;
+
+    if (window.innerWidth > 500) {
+        return <span>{`${diaSemana} ${diaMes} ${nombreMes}`}</span>;
+    }
+
+    return (
+        <div
+            style={{
+                display: "flex",
+                flexDirection: "column",
+                lineHeight: "1.2",
+                fontSize: "0.8rem",
+            }}
+        >
+            <span>{`${diaSemana} ${diaMes}`}</span>
+            <span>
+                {nombreMes}
+            </span>
+        </div>
+    );
+};
+
+const CustomAgendaTimeCell = ({ event }) => {
+    const start = event.start;
+    const end = event.end;
+
+    const desde = format(start, "HH:mm", { locale: es });
+    const hasta = format(end, "HH:mm", { locale: es });
+
+    if (typeof window !== "undefined" && window.innerWidth <= 500) {
+        return (
+            <div
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    fontSize: "0.8rem",
+                    lineHeight: "1.2",
+                }}
+            >
+    <span style={{ backgroundColor: "#007700", color: "#FFFFFF" }}>&nbsp;{`${desde}`}&nbsp;</span>
+    <span style={{ backgroundColor: "#FF0000" }}>&nbsp;{`${hasta}`}&nbsp;</span>
+            </div>
+        );
+    }
+
+    return `De ${desde} a ${hasta}`;
 };
 
 export default function Calendario({
@@ -140,30 +202,28 @@ export default function Calendario({
                 )}`,
 
             // Vista "Agenda": rango de cada evento
-            agendaTimeRangeFormat: ({ start, end }, culture, loc) =>
-                `${loc.format(start, "HH:mm", culture)} – ${loc.format(
-                    end,
-                    "HH:mm",
-                    culture
-                )}`,
-            agendaDateFormat: (date, culture, loc) => {
-                // Por ejemplo: "mié mar 19"
-                // si quieres el día largo, usa "EEEE" en vez de "EEE"
-                const raw = loc.format(date, "EEEE d MMMM", culture);
-                // raw podría ser "mié mar 19"
+            // agendaTimeRangeFormat: ({ start, end }, culture, loc) => {
+            //     const desde = loc.format(start, "HH:mm", culture);
+            //     const hasta = loc.format(end, "HH:mm", culture);
 
-                // Separamos en palabras ["mié", "mar", "19"]
-                const partes = raw.split(" ");
-                // Capitalizamos la primera letra de cada parte (excepto si es numérico)
-                for (let i = 0; i < partes.length; i++) {
-                    // Sólo capitalizamos si no es un número
-                    if (isNaN(Number(partes[i]))) {
-                        partes[i] = capitalizar(partes[i]);
-                    }
-                }
-                // Unimos de nuevo => "Mié Mar 19"
-                return partes.join(" ");
-            },
+            //     if (typeof window !== "undefined" && window.innerWidth <= 500) {
+            //         return (
+            //             <div
+            //                 style={{
+            //                     display: "flex",
+            //                     flexDirection: "column",
+            //                     fontSize: "0.8rem",
+            //                     lineHeight: "1.2",
+            //                 }}
+            //             >
+            //                 <span>{`De ${desde}`}</span>
+            //                 <span>{`a ${hasta}`}</span>
+            //             </div>
+            //         );
+            //     }
+
+            //     return `De ${desde} a ${hasta}`;
+            // },
         },
 
         // Permitir "selectable" (clic en día para crear) solo si está logado
@@ -185,9 +245,19 @@ export default function Calendario({
 
         // Añadir el componente personalizado para los eventos
         components: {
-            event: (props) => <EventWithWhatsApp {...props} view={currentView} />,
+            event: (props) => (
+                <EventWithWhatsApp {...props} view={currentView} />
+            ),
+            agenda: {
+                date: CustomAgendaDateCell,
+                time: CustomAgendaTimeCell,
+            },
         },
     };
 
-    return <Calendar {...calendarProps} />;
+    return (
+        <div className={styles.calendarContainer}>
+            <Calendar {...calendarProps} />
+        </div>
+    );
 }

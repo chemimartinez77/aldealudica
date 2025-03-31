@@ -341,3 +341,20 @@
     margin: 0.25rem 0;
   }
   
+  @media (max-width: 600px) {
+    .modal-content {
+      width: 90vw;
+      padding: 1rem;
+    }
+  
+    .modal-content form {
+      grid-template-columns: 1fr; /* Pasa a una sola columna */
+    }
+  
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      font-size: 0.9rem;
+    }
+  }
+  
