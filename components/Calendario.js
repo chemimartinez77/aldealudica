@@ -3,8 +3,8 @@ import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { parse, startOfWeek, getDay, format } from "date-fns";
 import es from "date-fns/locale/es";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { Icon } from "@chakra-ui/react"; // Para el icono de WhatsApp
-import { FaWhatsapp, FaInfoCircle } from "react-icons/fa"; // Icono de WhatsApp y de info
+import { Icon } from "@chakra-ui/react";
+import { FaWhatsapp, FaInfoCircle } from "react-icons/fa";
 import { useState } from "react";
 import styles from "../styles/Calendario.module.css";
 
@@ -19,28 +19,29 @@ const localizer = dateFnsLocalizer({
 
 // Componente personalizado para renderizar cada evento
 const EventWithWhatsApp = ({ event, view }) => {
-    const { title, start, end, location, gameDetails } = event;
+    const { id, title, start, end, location, gameDetails } = event;
 
-    // Solo decoramos en la vista agenda
     if (view !== "agenda") {
         return <span>{title}</span>;
     }
 
-    // Formatear la fecha y hora para el mensaje
-    const date = format(start, "dd 'de' MMMM 'de' yyyy", { locale: es });
+    const dateStr = format(start, "dd 'de' MMMM 'de' yyyy", { locale: es });
     const startTime = format(start, "HH:mm", { locale: es });
     const endTime = format(end, "HH:mm", { locale: es });
 
-    // Crear mensaje de WhatsApp
+    // Enlace personalizado a la vista de agenda con la modal abierta
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+    const partidaLink = `${baseUrl}/eventos?id=${id}`;
+
     const message =
         `¡Hola! ¿Te unes a la partida?%0A` +
         `Nombre: ${encodeURIComponent(title.split(" - ")[0])}%0A` +
-        `Fecha: ${encodeURIComponent(date)}%0A` +
+        `Fecha: ${encodeURIComponent(dateStr)}%0A` +
         `Hora: ${encodeURIComponent(`${startTime}–${endTime}`)}%0A` +
         `Lugar: ${encodeURIComponent(location || "No especificado")}%0A` +
-        `Únete al grupo para más detalles: https://chat.whatsapp.com/Edclf0FcRLZAk1KjeyniWw`;
+        `+info: ${encodeURIComponent(partidaLink)}`;
 
-    const whatsappLink = `https://api.whatsapp.com/send?text=${message}`;
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${message}`;
 
     return (
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -59,7 +60,7 @@ const EventWithWhatsApp = ({ event, view }) => {
             )}
             <span style={{ fontWeight: 500 }}>{title}</span>
             <a
-                href={whatsappLink}
+                href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Compartir por WhatsApp"
@@ -97,7 +98,8 @@ const CustomAgendaDateCell = ({ day }) => {
     );
     const [diaSemana, diaMes, nombreMes] = capitalizadas;
 
-    if (window.innerWidth > 500) {
+    // Usar window solo si está definido
+    if (typeof window !== "undefined" && window.innerWidth > 500) {
         return <span>{`${diaSemana} ${diaMes} ${nombreMes}`}</span>;
     }
 
@@ -111,17 +113,13 @@ const CustomAgendaDateCell = ({ day }) => {
             }}
         >
             <span>{`${diaSemana} ${diaMes}`}</span>
-            <span>
-                {nombreMes}
-            </span>
+            <span>{nombreMes}</span>
         </div>
     );
 };
 
 const CustomAgendaTimeCell = ({ event }) => {
-    const start = event.start;
-    const end = event.end;
-
+    const { start, end } = event;
     const desde = format(start, "HH:mm", { locale: es });
     const hasta = format(end, "HH:mm", { locale: es });
 
@@ -135,8 +133,12 @@ const CustomAgendaTimeCell = ({ event }) => {
                     lineHeight: "1.2",
                 }}
             >
-    <span style={{ backgroundColor: "#007700", color: "#FFFFFF" }}>&nbsp;{`${desde}`}&nbsp;</span>
-    <span style={{ backgroundColor: "#FF0000" }}>&nbsp;{`${hasta}`}&nbsp;</span>
+                <span style={{ backgroundColor: "#007700", color: "#FFFFFF" }}>
+                    &nbsp;{desde}&nbsp;
+                </span>
+                <span style={{ backgroundColor: "#FF0000" }}>
+                    &nbsp;{hasta}&nbsp;
+                </span>
             </div>
         );
     }
@@ -150,18 +152,26 @@ export default function Calendario({
     onEventClick,
     isLoggedIn,
 }) {
-    const [currentView, setCurrentView] = useState("month");
-    // Ejemplo: convertir tus partidas a `events`
-    const events = partidas
-        .filter((p) => p.date && p.startTime && p.endTime)
-        .map((p) => ({
-            ...p,
-            start: new Date(`${p.date}T${p.startTime}`),
-            end: new Date(`${p.date}T${p.endTime}`),
-            title: p.title,
-        }));
+    // Inicializar currentView de forma condicional según la URL
+    const [currentView, setCurrentView] = useState(() => {
+        if (typeof window !== "undefined") {
+            const params = new URLSearchParams(window.location.search);
+            return params.has("id") ? "agenda" : "month";
+        }
+        return "month";
+    });
 
-    // Configurar props del calendario según el login
+    // Convertir partidas a events
+    const events = partidas
+    .filter((p) => p.date && p.startTime && p.endTime)
+    .map((p) => ({
+        ...p,
+        id: p.id || p._id, // 🔥 asegúrate de que esté
+        start: new Date(`${p.date}T${p.startTime}`),
+        end: new Date(`${p.date}T${p.endTime}`),
+        title: p.title,
+    }));
+
     const capitalizar = (str) => str.charAt(0).toUpperCase() + str.slice(1);
     const calendarProps = {
         culture: "es",
@@ -181,69 +191,28 @@ export default function Calendario({
         },
         onView: (view) => setCurrentView(view),
         formats: {
-            // Nombres de los días en el encabezado de la vista Semana/Día
             weekdayFormat: (date, culture, loc) =>
-                capitalizar(loc.format(date, "EEEE", culture)), // "lunes", "martes", etc.
-
-            // Encabezado del mes (ej. "marzo 2025")
+                capitalizar(loc.format(date, "EEEE", culture)),
             monthHeaderFormat: (date, culture, loc) =>
                 capitalizar(loc.format(date, "MMMM yyyy", culture)),
-
-            // Formato de la columna de horas a la izquierda (gutter)
             timeGutterFormat: (date, culture, loc) =>
                 loc.format(date, "HH:mm", culture),
-
-            // Rango de horas de un evento (ej. "14:00 – 16:00")
             eventTimeRangeFormat: ({ start, end }, culture, loc) =>
                 `${loc.format(start, "HH:mm", culture)} – ${loc.format(
                     end,
                     "HH:mm",
                     culture
                 )}`,
-
-            // Vista "Agenda": rango de cada evento
-            // agendaTimeRangeFormat: ({ start, end }, culture, loc) => {
-            //     const desde = loc.format(start, "HH:mm", culture);
-            //     const hasta = loc.format(end, "HH:mm", culture);
-
-            //     if (typeof window !== "undefined" && window.innerWidth <= 500) {
-            //         return (
-            //             <div
-            //                 style={{
-            //                     display: "flex",
-            //                     flexDirection: "column",
-            //                     fontSize: "0.8rem",
-            //                     lineHeight: "1.2",
-            //                 }}
-            //             >
-            //                 <span>{`De ${desde}`}</span>
-            //                 <span>{`a ${hasta}`}</span>
-            //             </div>
-            //         );
-            //     }
-
-            //     return `De ${desde} a ${hasta}`;
-            // },
         },
-
-        // Permitir "selectable" (clic en día para crear) solo si está logado
         selectable: isLoggedIn,
-
-        // Si está logado, llamamos a onDayClick para crear partida
-        // Si no, no hacemos nada al clicar en un hueco
         onSelectSlot: isLoggedIn
             ? (slotInfo) => {
                   onDayClick(slotInfo.start);
               }
             : undefined,
-
-        // onSelectEvent se ejecuta siempre, para abrir la modal
-        // en modo view/edit según la lógica del padre
         onSelectEvent: (event) => {
             onEventClick(event);
         },
-
-        // Añadir el componente personalizado para los eventos
         components: {
             event: (props) => (
                 <EventWithWhatsApp {...props} view={currentView} />
@@ -254,10 +223,9 @@ export default function Calendario({
             },
         },
     };
-
     return (
         <div className={styles.calendarContainer}>
-            <Calendar {...calendarProps} />
+            <Calendar {...calendarProps} defaultView={currentView} view={currentView} />
         </div>
     );
 }

@@ -15,6 +15,7 @@ export default function ModalPartida({
     onSave,
     onDelete,
     isLoggedIn,
+    isAdmin, // <- Añadido
 }) {
     // Campos del formulario
     const [title, setTitle] = useState("");
@@ -287,7 +288,6 @@ export default function ModalPartida({
             creatorId: currentUserId,
             participants,
         };
-        console.log("selectedGameDetails: ", selectedGameDetails);
         onSave(newPartida);
     }
 
@@ -312,7 +312,6 @@ export default function ModalPartida({
 
     // Render de info en solo lectura (para view/join)
     function renderReadOnlyInfo() {
-        console.log("Detalles del juego:", selectedGameDetails);
         return (
             <div className={styles["read-only-info"]}>
                 {selectedGameDetails?.image && (
@@ -347,29 +346,6 @@ export default function ModalPartida({
             
     const isFormMode = mode === "create" || mode === "edit";
     const isReadOnlyMode = mode === "view" || mode === "join";
-
-    // Debug: verifica el modo y condiciones
-    useEffect(() => {
-        console.log("ModalPartida debug =>", {
-            mode,
-            isLoggedIn,
-            isCreator,
-            isParticipant,
-            isFull,
-            creatorId: partida?.creatorId,
-            currentUserId,
-            participants,
-        });
-    }, [
-        mode,
-        isLoggedIn,
-        isCreator,
-        isParticipant,
-        isFull,
-        partida?.creatorId,
-        currentUserId,
-        participants,
-    ]);
 
     return (
         <div className={styles["modal-overlay"]}>
@@ -660,7 +636,7 @@ export default function ModalPartida({
                     )}
 
                     {/* Botón eliminar => solo edit + eres el creador */}
-                    {mode === "edit" && isCreator && (
+                    {mode === "edit" && (isCreator || isAdmin) && (
                         <button
                             type="button"
                             onClick={handleDeleteClick}

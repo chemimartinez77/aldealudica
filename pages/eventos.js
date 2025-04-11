@@ -11,26 +11,49 @@ const Calendario = dynamic(() => import("../components/Calendario"), {
 
 export default function Eventos() {
     const { data: session } = useSession();
-    const currentUserId = session?.user?.id; // Aquí obtienes el ID
+    console.log("session", session);
+    const currentUserId = session?.user?.id;
+    const isAdmin = session?.user?.role === "admin";
+
     const [partidas, setPartidas] = useState([]);
     const [modalOpen, setModalOpen] = useState(false);
-    const [modalMode, setModalMode] = useState("create"); // "create" o "edit" o "view"
+    const [modalMode, setModalMode] = useState("create");
     const [selectedPartida, setSelectedPartida] = useState(null);
     const [selectedDate, setSelectedDate] = useState(null);
 
-    // Cargar las partidas desde la BD
     useEffect(() => {
-        // (NUEVO) Ahora /api/partidas (GET) devuelve { partidas: [...] }
         fetch("/api/partidas")
             .then((res) => res.json())
             .then((data) => {
-                // data = { partidas: [...] }
-                setPartidas(data.partidas); // Ojo, data.partidas es el array real
+                setPartidas(data.partidas);
             })
             .catch((err) => console.error(err));
     }, []);
 
-    // Al hacer clic en un día para crear
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const partidaIdFromUrl = params.get("id");
+
+        if (partidaIdFromUrl && partidas.length > 0) {
+            const partida = partidas.find((p) => p.id === partidaIdFromUrl);
+
+            if (partida) {
+                if (!currentUserId) {
+                    setModalMode("view");
+                } else if (partida.creatorId === currentUserId || isAdmin) {
+                    setModalMode("edit");
+                } else {
+                    setModalMode("join");
+                }
+
+                setSelectedPartida(partida);
+                setModalOpen(true);
+            } else {
+                console.warn("No se encontró la partida con ese ID");
+            }
+        }
+    }, [partidas, currentUserId, isAdmin]);
+
     const handleDayClick = (date) => {
         if (date < new Date().setHours(0, 0, 0, 0)) {
             alert("No puedes crear partidas en fechas pasadas");
@@ -40,50 +63,40 @@ export default function Eventos() {
             alert("Inicia sesión para crear partidas.");
             return;
         }
-        // Extraer hora y minuto de la 'date'
+
         const hour = date.getHours();
         const minute = date.getMinutes();
-
-        // Calcular hora de fin: +3 horas
         let endH = hour + 3;
-        // Si no quieres pasarte de la medianoche, clamp a 23
         if (endH > 23) endH = 23;
+
         setSelectedDate(date);
         setSelectedPartida({
             startHour: String(hour),
             startMinute: String(minute).padStart(2, "0"),
             endHour: String(endH),
             endMinute: String(minute).padStart(2, "0"),
-            // ... lo que necesites
         });
         setModalMode("create");
         setModalOpen(true);
     };
 
-    // Al hacer clic en un evento (partida)
     const handleEventClick = (partida) => {
         if (!currentUserId) {
-            // No logado => solo ver
             setModalMode("view");
-        } else if (partida.creatorId === currentUserId) {
-            // Eres el creador => modo edit
+        } else if (partida.creatorId === currentUserId || isAdmin) {
             setModalMode("edit");
         } else {
-            // Logado pero no eres creador => modo join
             setModalMode("join");
         }
         setSelectedPartida(partida);
         setModalOpen(true);
     };
 
-    // Al guardar la partida en la modal
     const handleSavePartida = (newPartida) => {
-        // Llamada al backend para crear o editar
-        // Si newPartida tiene un id, es edición; si no, es creación
         const method = newPartida.id ? "PUT" : "POST";
         const payload = { ...newPartida };
         if (!newPartida.id) {
-            delete payload.id; // Elimina el id si es creación
+            delete payload.id;
         }
 
         fetch("/api/partidas", {
@@ -96,10 +109,8 @@ export default function Eventos() {
                 const updatedPartida = saved.partida;
 
                 if (method === "POST") {
-                    // Crear
                     setPartidas((prev) => [...prev, updatedPartida]);
                 } else {
-                    // Editar
                     setPartidas((prev) =>
                         prev.map((p) =>
                             p.id === updatedPartida.id ? updatedPartida : p
@@ -114,12 +125,10 @@ export default function Eventos() {
             });
     };
 
-    // Al eliminar la partida
     function handleDeletePartida(id) {
         fetch(`/api/partidas?id=${id}`, { method: "DELETE" })
             .then((res) => {
                 if (!res.ok) throw new Error("Error al eliminar");
-                // Actualizar estado local
                 setPartidas((prev) => prev.filter((p) => p.id !== id));
                 setModalOpen(false);
             })
@@ -127,6 +136,13 @@ export default function Eventos() {
                 console.error("Error eliminando partida:", err);
                 alert("No se pudo eliminar la partida. Inténtalo de nuevo.");
             });
+    }
+
+    function handleCloseModal() {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("id");
+        window.history.replaceState({}, "", url.toString());
+        setModalOpen(false);
     }
 
     return (
@@ -144,8 +160,9 @@ export default function Eventos() {
                         mode={modalMode}
                         partida={selectedPartida}
                         currentUserId={currentUserId}
+                        isAdmin={isAdmin}
                         date={selectedDate}
-                        onClose={() => setModalOpen(false)}
+                        onClose={handleCloseModal}
                         onSave={handleSavePartida}
                         onDelete={handleDeletePartida}
                         isLoggedIn={!!session}

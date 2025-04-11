@@ -34,6 +34,7 @@ export default NextAuth({
           id: user._id.toString(),
           name: user.name,
           email: user.email,
+          role: user.role,
         };
       },
     }),
@@ -56,6 +57,7 @@ export default NextAuth({
               password: null,
               verified: true,
               googleId: user.id,
+              role: "usuario",
             });
             await sendWelcomeEmail(user.email, user.name);
           } else {
@@ -67,6 +69,7 @@ export default NextAuth({
         user.id = doc._id.toString();
         user.name = doc.name;
         user.email = doc.email;
+        user.role = doc.role;
       }
 
       return true;
@@ -77,6 +80,7 @@ export default NextAuth({
         token.id = user.id;
         token.name = user.name;
         token.email = user.email;
+        token.role = user.role;
       }
       return token;
     },
@@ -84,6 +88,7 @@ export default NextAuth({
     async session({ session, token }) {
       if (token?.id) {
         session.user.id = token.id;
+        session.user.role = token.role;
       }
       if (token?.name) {
         session.user.name = token.name;

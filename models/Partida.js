@@ -6,12 +6,13 @@ const PartidaSchema = new mongoose.Schema({
   title: String,
   game: String,
   gameDetails: {
-    type: mongoose.Schema.Types.Mixed,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Game",
     default: null,
   },
   description: String,
-  date: String, // "YYYY-MM-DD"
-  startTime: String, // "HH:mm"
+  date: String,
+  startTime: String,
   endTime: String,
   playerLimit: Number,
   creatorParticipates: Boolean,
@@ -20,17 +21,30 @@ const PartidaSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
-
-  // participants es un array de ObjectIds que referencian a la colección "User"
   participants: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
   ],
+  
+  // Nuevos campos
+  realDuration: {
+    hours: { type: Number, default: 0 },
+    minutes: { type: Number, default: 0 }
+  },
+  scores: [{
+    player: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    score: Number
+  }],
+  winner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  images: [{
+    url: String,
+    publicId: String
+  }],
+  completed: { type: Boolean, default: false }
 });
 
-// Generar un ID único si no existe
 PartidaSchema.pre("save", function (next) {
   if (!this.id) {
     this.id = new mongoose.Types.ObjectId().toString();
@@ -38,5 +52,4 @@ PartidaSchema.pre("save", function (next) {
   next();
 });
 
-export default mongoose.models.Partida ||
-  mongoose.model("Partida", PartidaSchema);
+export default mongoose.models.Partida || mongoose.model("Partida", PartidaSchema);
