@@ -49,6 +49,7 @@ export default function MyApp({ Component, pageProps }) {
         // Envía la suscripción al servidor
         const response = await fetch("/api/subscribe", {
           method: "POST",
+          credentials: 'include', // Añadir esta línea
           headers: {
             "Content-Type": "application/json",
           },

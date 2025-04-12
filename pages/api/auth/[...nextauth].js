@@ -1,4 +1,3 @@
-// pages/api/auth/[...nextauth].js
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
@@ -22,11 +21,9 @@ export default NextAuth({
       async authorize(credentials) {
         await dbConnect();
         const { email, password } = credentials;
-
         const user = await User.findOne({ email });
         if (!user || !user.password) throw new Error("Credenciales inválidas");
         if (!user.verified) throw new Error("Tu cuenta aún no está verificada");
-
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) throw new Error("Credenciales inválidas");
 
@@ -41,6 +38,19 @@ export default NextAuth({
   ],
   session: {
     strategy: "jwt",
+  },
+  // Configuración explícita de las cookies para entornos de desarrollo
+  cookies: {
+    sessionToken: {
+      name: "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        //secure: process.env.NODE_ENV === "production", // secure false en dev
+        secure: false,
+      },
+    },
   },
   callbacks: {
     async signIn({ user, account }) {
@@ -65,16 +75,13 @@ export default NextAuth({
             await doc.save();
           }
         }
-
         user.id = doc._id.toString();
         user.name = doc.name;
         user.email = doc.email;
-        user.role = doc.role;
+        user.role = doc.role; // Esta línea es crucial para propagar el role
       }
-
       return true;
     },
-
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
@@ -84,7 +91,6 @@ export default NextAuth({
       }
       return token;
     },
-
     async session({ session, token }) {
       if (token?.id) {
         session.user.id = token.id;
@@ -101,9 +107,6 @@ export default NextAuth({
   },
 });
 
-/**
- * Envía un email de bienvenida cuando creamos un nuevo usuario.
- */
 const sendWelcomeEmail = async (email, name) => {
   try {
     const transporter = nodemailer.createTransport({

@@ -17,7 +17,9 @@ export default async function handler(req, res) {
     }
 
     // Si no existe, llamamos a la API de BGG
-    const response = await fetch(`https://boardgamegeek.com/xmlapi2/thing?id=${bggId}`);
+    const response = await fetch(`https://boardgamegeek.com/xmlapi2/thing?id=${bggId}`, {
+        credentials: 'include' // Añadir esta línea
+    });
     const xml = await response.text();
     const parsed = await parseBGGThingXML(xml);
 

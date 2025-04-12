@@ -11,7 +11,6 @@ const Calendario = dynamic(() => import("../components/Calendario"), {
 
 export default function Eventos() {
     const { data: session } = useSession();
-    console.log("session", session);
     const currentUserId = session?.user?.id;
     const isAdmin = session?.user?.role === "admin";
 
@@ -22,7 +21,9 @@ export default function Eventos() {
     const [selectedDate, setSelectedDate] = useState(null);
 
     useEffect(() => {
-        fetch("/api/partidas")
+        fetch("/api/partidas", {
+            credentials: 'include' // Añadir esta línea
+        })
             .then((res) => res.json())
             .then((data) => {
                 setPartidas(data.partidas);
@@ -101,6 +102,7 @@ export default function Eventos() {
 
         fetch("/api/partidas", {
             method,
+            credentials: 'include', // Añadir esta línea
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         })
@@ -126,7 +128,10 @@ export default function Eventos() {
     };
 
     function handleDeletePartida(id) {
-        fetch(`/api/partidas?id=${id}`, { method: "DELETE" })
+        fetch(`/api/partidas?id=${id}`, {
+            method: "DELETE",
+            credentials: 'include' // Añadir esta línea
+        })
             .then((res) => {
                 if (!res.ok) throw new Error("Error al eliminar");
                 setPartidas((prev) => prev.filter((p) => p.id !== id));

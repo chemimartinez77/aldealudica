@@ -5,6 +5,7 @@ import locations from "../data/locations.json"; // ["Aldea Lúdica"]
 import styles from "../styles/ModalPartida.module.css";
 import SearchResultsModal from "./SearchResultsModal";
 import ImagePreviewModal from "./ImagePreviewModal";
+import { useRouter } from 'next/router'; // Importar useRouter
 
 export default function ModalPartida({
     mode, // "create", "edit", "view", "join"
@@ -17,6 +18,13 @@ export default function ModalPartida({
     isLoggedIn,
     isAdmin, // <- Añadido
 }) {
+    const router = useRouter(); // Usar useRouter para la navegación
+        // Define the handleGoToDetails function
+    const handleGoToDetails = () => {
+        if (partida && partida.id) {
+            router.push(`/partidas/${partida.id}`); // Redirigir a la página de detalles
+        }
+    };
     // Campos del formulario
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -121,7 +129,9 @@ export default function ModalPartida({
             (mode === "edit" || mode === "view" || mode === "join") &&
             partida?.id
         ) {
-            fetch(`/api/partidas/${partida.id}`)
+            fetch(`/api/partidas/${partida.id}`, {
+                credentials: 'include' // Añadir esta línea
+            })
                 .then((res) => res.json())
                 .then((data) => {
                     if (data.partida) {
@@ -262,7 +272,7 @@ export default function ModalPartida({
         if (errors.length > 0) {
             alert(
                 "Faltan o son inválidos los siguientes campos: " +
-                    errors.join(", ")
+                errors.join(", ")
             );
             return;
         }
@@ -343,7 +353,7 @@ export default function ModalPartida({
             </div>
         );
     }
-            
+
     const isFormMode = mode === "create" || mode === "edit";
     const isReadOnlyMode = mode === "view" || mode === "join";
 
@@ -734,6 +744,13 @@ export default function ModalPartida({
                         </div>
                     </div>
                 )}
+            {/* Botón para ir a la página de detalles */}
+            <button
+                onClick={handleGoToDetails}
+                className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
+            >
+                Ver Detalles de la Partida
+            </button>
             </div>
         </div>
     );

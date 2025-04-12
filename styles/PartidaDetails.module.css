@@ -1,0 +1,230 @@
+/* Estilos personalizados para la página de detalles de partida */
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.cardHeader {
+    background-color: #0f2970;
+    color: white;
+    padding: 16px;
+}
+
+.cardTitle {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0;
+}
+
+.cardBody {
+    padding: 20px;
+}
+
+.sectionTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #1e3a8a;
+}
+
+.detailsGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+@media (min-width: 768px) {
+    .detailsGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.detailItem {
+    margin-bottom: 12px;
+}
+
+.detailLabel {
+    font-weight: 500;
+    color: #4b5563;
+    margin-bottom: 4px;
+}
+
+.imageContainer {
+    position: relative;
+    height: 250px;
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.inputGroup {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.input {
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 8px 12px;
+}
+
+.numberInput {
+    width: 100px;
+}
+
+.fileInput {
+    display: block;
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.button {
+    background-color: #2563eb;
+    color: white;
+    font-weight: 500;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.button:hover {
+    background-color: #1d4ed8;
+}
+
+.saveButton {
+    display: block;
+    margin-left: auto;
+}
+
+.imagesGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+@media (min-width: 768px) {
+    .imagesGrid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.imageBox {
+    position: relative;
+    height: 160px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+.spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.spinnerCircle {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.uploadingIndicator {
+    display: flex;
+    align-items: center;
+    color: #2563eb;
+    margin-top: 8px;
+}
+
+.uploadingSpinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(37, 99, 235, 0.3);
+    border-top: 2px solid #2563eb;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: spin 1s linear infinite;
+}
+
+.imageOverlayButtons {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    gap: 6px;
+    z-index: 2;
+}
+
+.iconButton {
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.iconButton:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.imageWrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+.imageOverlay {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .imageActionButton {
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    color: white;
+    padding: 4px 8px;
+    margin: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s ease;
+  }
+  
+  .imageActionButton:hover {
+    background: rgba(0, 0, 0, 0.8);
+  }
+  

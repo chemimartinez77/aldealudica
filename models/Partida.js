@@ -40,7 +40,8 @@ const PartidaSchema = new mongoose.Schema({
   winner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   images: [{
     url: String,
-    publicId: String
+    publicId: String,
+    isDeleted: { type: Boolean, default: false }
   }],
   completed: { type: Boolean, default: false }
 });
