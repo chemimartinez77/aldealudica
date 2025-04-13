@@ -97,14 +97,23 @@ export default function PartidaPage() {
     };
 
     // Eliminar imagen (marcar isDeleted = true) con confirmación
+    // Añade un estado para controlar qué imagen está en proceso de eliminación
+    const [fadingImageId, setFadingImageId] = useState(null);
+    
+    // Modifica la función handleDeleteImage para incluir el efecto de fundido
     const handleDeleteImage = async (publicId) => {
+        // Ya no aplicamos el fundido aquí, solo mostramos el diálogo
         setImageToDelete(publicId);
         setShowConfirmDialog(true);
     };
-
+    
     const confirmDeleteImage = async () => {
         if (!imageToDelete) return;
-
+    
+        // Aplicamos el fundido después de la confirmación
+        setFadingImageId(imageToDelete);
+        setShowConfirmDialog(false);
+        
         try {
             const res = await fetch(`/api/partidas/${id}/images`, {
                 method: 'DELETE',
@@ -113,16 +122,22 @@ export default function PartidaPage() {
                 body: JSON.stringify({ publicId: imageToDelete }),
             });
             const updateResult = await res.json();
+            
             if (updateResult.error) {
                 alert('Error al eliminar la imagen: ' + updateResult.error);
+                setFadingImageId(null); // Restaura la opacidad si hay error
             } else {
-                setImages(updateResult.images);
+                // Espera a que la transición termine completamente antes de actualizar el estado
+                setTimeout(() => {
+                    setImages(updateResult.images);
+                    setFadingImageId(null);
+                }, 1800); // Asegúrate de que este tiempo sea mayor que la duración de la transición CSS
             }
         } catch (err) {
             console.error(err);
             alert('Error interno al eliminar la imagen.');
+            setFadingImageId(null);
         } finally {
-            setShowConfirmDialog(false);
             setImageToDelete(null);
         }
     };
@@ -315,12 +330,13 @@ export default function PartidaPage() {
                             images
                                 .filter((image) => !image.isDeleted) // ocultar las eliminadas
                                 .map((image, index) => {
-                                    const imageUrl =
-                                        typeof image === 'string' ? image : image.url;
-
+                                    const imageUrl = typeof image === 'string' ? image : image.url;
+                                    // Corrige esta línea - verifica si el publicId coincide con fadingImageId
+                                    const isFading = fadingImageId && image.publicId === fadingImageId;
+                                
                                     return (
                                         <div key={index} className={styles.imageBox}>
-                                            <div className={styles.imageWrapper}>
+                                            <div className={`${styles.imageWrapper} ${isFading ? styles.fadingImage : ''}`}>
                                                 <Image
                                                     src={imageUrl}
                                                     alt={`Imagen ${index + 1}`}
@@ -340,6 +356,7 @@ export default function PartidaPage() {
                                                         className={styles.imageActionButton}
                                                         onClick={() => handleDeleteImage(image.publicId)}
                                                         title="Eliminar lógicamente la imagen"
+                                                        disabled={isFading}
                                                     >
                                                         <Trash2 size={20} />
                                                     </button>
@@ -352,14 +369,19 @@ export default function PartidaPage() {
                             <p className="text-gray-500">No hay imágenes para mostrar</p>
                         )}
                     </div>
-                    <div style={{ marginTop: '5px' }}>
+                    <div className={styles.uploadContainer}>
+                        <label htmlFor="image-upload" className={styles.uploadButton} disabled={uploading}>
+                            <span className={styles.uploadIcon}>+</span>
+                            Subir imágenes
+                        </label>
                         <input
+                            id="image-upload"
                             type="file"
                             multiple
                             accept="image/*"
                             onChange={handleImageUpload}
                             disabled={uploading}
-                            className={styles.fileInput}
+                            className={styles.hiddenFileInput}
                         />
                         {uploading && (
                             <div className={styles.uploadingIndicator}>

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import styles from '../styles/ConfirmDialog.module.css';
 
-export default function ConfirmDialog({ isOpen, title = 'Confirmar', message = '', confirmText = 'Sí', cancelText = 'Cancelar', onConfirm, onCancel }) {
+export default function ConfirmDialog({ isOpen, title = 'Confirmar', message = '', confirmText = 'Continuar', cancelText = 'Cancelar', onConfirm, onCancel }) {
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';

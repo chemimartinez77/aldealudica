@@ -56,44 +56,41 @@ export default async function handler(req, res) {
     }
   }
 
+  // En el caso DELETE
   if (req.method === 'DELETE') {
+    const { publicId } = req.body;
+    
+    if (!publicId) {
+      return res.status(400).json({ error: 'Se requiere el publicId de la imagen' });
+    }
+  
     try {
-      const { publicId } = req.body;
-
-      if (!publicId) {
-        return res.status(400).json({ error: 'Falta publicId de la imagen' });
-      }
-
+      await dbConnect();
+      // Cambiar findById por findOne({ id }) para ser consistente con el método POST
       const partida = await Partida.findOne({ id });
+      
       if (!partida) {
         return res.status(404).json({ error: 'Partida no encontrada' });
       }
-
-      // Verificar permisos
-      const userId = token.id;
-      const isAdmin = token.role === "admin";
-      const isParticipant = partida.participants.some(p =>
-        p.toString() === userId || (p._id && p._id.toString() === userId)
-      );
-      if (!isAdmin && !isParticipant) {
-        return res.status(403).json({ error: 'No tiene permiso para eliminar imágenes de esta partida' });
+  
+      // En lugar de eliminar de Cloudinary, solo marcamos como eliminada en MongoDB
+      const imageIndex = partida.images.findIndex(img => img.publicId === publicId);
+      
+      if (imageIndex !== -1) {
+        // Marcar como eliminada lógicamente
+        partida.images[imageIndex].isDeleted = true;
+        await partida.save();
+        
+        return res.status(200).json({ 
+          success: true, 
+          images: partida.images 
+        });
+      } else {
+        return res.status(404).json({ error: 'Imagen no encontrada' });
       }
-
-      // Eliminar de Cloudinary
-      try {
-        await cloudinary.uploader.destroy(publicId);
-      } catch (cloudError) {
-        console.error('Error deleting image from Cloudinary:', cloudError);
-      }
-
-      // Eliminar de la base de datos
-      partida.images = (partida.images || []).filter(img => img.publicId !== publicId);
-      await partida.save();
-
-      return res.status(200).json({ success: true, images: partida.images });
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: 'Error al eliminar la imagen' });
+      console.error('Error al marcar imagen como eliminada:', error);
+      return res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 
