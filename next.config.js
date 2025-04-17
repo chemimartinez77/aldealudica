@@ -8,7 +8,12 @@ module.exports = {
             {
                 protocol: 'https',
                 hostname: 'res.cloudinary.com',
-                pathname: '/**', // Esto permite todas las rutas dentro de ese dominio
+                pathname: '/**',
+            },
+            {
+                protocol: 'https',
+                hostname: 'cf.geekdo-images.com',
+                pathname: '/**', // <- imágenes de BoardGameGeek
             },
         ],
     },
@@ -16,7 +21,7 @@ module.exports = {
         return [
             {
                 source: '/sw.js',
-                destination: '/static/sw.js', // Apunta a public/static/sw.js
+                destination: '/static/sw.js',
             },
         ];
     },

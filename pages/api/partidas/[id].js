@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   if (req.method === "GET") {
     try {
       // Buscamos la partida por su campo "id" (no _id) y hacemos populate de "participants"
-      const partida = await Partida.findOne({ id }).populate("participants").lean();
+      const partida = await Partida.findOne({ id }).populate("participants").populate("gameDetails").lean();
       if (!partida) {
         return res.status(404).json({ error: "Partida no encontrada" });
       }
