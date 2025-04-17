@@ -18,6 +18,7 @@ export default async function handler(req, res) {
 
     if (req.method === "GET") {
         try {
+            // Asegúrate de que estás haciendo populate de gameDetails
             const partidas = await Partida.find({}).populate("gameDetails");
             return res.status(200).json({ partidas });
         } catch (error) {

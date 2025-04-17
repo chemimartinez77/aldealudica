@@ -1,8 +1,28 @@
 import React, { useEffect } from "react";
 import "../styles/globals.css";
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider, useSession } from "next-auth/react";
 import { ChakraProvider } from "@chakra-ui/react";
 import theme from "../lib/theme";
+import { initSessionTimeout, cleanupSessionTimeout } from '../utils/sessionTimeout';
+
+// Componente para inicializar el timeout de sesión solo para usuarios autenticados
+function SessionTimeoutHandler({ children }) {
+  const { data: session } = useSession();
+  
+  useEffect(() => {
+    // Solo inicializa el timeout para usuarios autenticados
+    if (session) {
+      initSessionTimeout();
+      
+      // Limpieza al desmontar
+      return () => {
+        cleanupSessionTimeout();
+      };
+    }
+  }, [session]);
+  
+  return children;
+}
 
 export default function MyApp({ Component, pageProps }) {
   useEffect(() => {
@@ -89,7 +109,9 @@ export default function MyApp({ Component, pageProps }) {
   return (
     <SessionProvider session={pageProps.session}>
       <ChakraProvider theme={theme}>
-        <Component {...pageProps} />
+        <SessionTimeoutHandler>
+          <Component {...pageProps} />
+        </SessionTimeoutHandler>
       </ChakraProvider>
     </SessionProvider>
   );

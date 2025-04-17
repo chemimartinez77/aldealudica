@@ -118,6 +118,18 @@ export default function ModalPartida({
         setGameSearch(partida.game || "");
         if (partida.gameDetails) {
             setSelectedGameDetails(partida.gameDetails);
+        } else if (partida.game && partida.game.trim() !== "") {
+            // Si tenemos el nombre del juego pero no los detalles, intentamos buscarlos
+            console.log("Buscando detalles para el juego:", partida.game);
+            fetch(`/api/search-game-by-name?name=${encodeURIComponent(partida.game)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.game) {
+                        console.log("Encontrados detalles del juego:", data.game);
+                        setSelectedGameDetails(data.game);
+                    }
+                })
+                .catch(err => console.error("Error al buscar detalles del juego:", err));
         }
 
         setParticipants(partida.participants || []);
