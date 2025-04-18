@@ -4,6 +4,8 @@ import Partida from "../../../models/Partida";
 import mongoose from "mongoose";
 import webpush from "web-push";
 import Subscription from "../../../models/Subscription";
+import Game from "../../../models/Game";
+mongoose.model("Game");
 
 // Configurar VAPID (asegúrate de tener las variables definidas en tu .env)
 webpush.setVapidDetails(
