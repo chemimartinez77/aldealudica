@@ -19,7 +19,7 @@ export default function ModalPartida({
     isAdmin, // <- Añadido
 }) {
     const router = useRouter(); // Usar useRouter para la navegación
-        // Define the handleGoToDetails function
+    // Define the handleGoToDetails function
     const handleGoToDetails = () => {
         if (partida && partida.id) {
             router.push(`/partidas/${partida.id}`); // Redirigir a la página de detalles
@@ -79,6 +79,7 @@ export default function ModalPartida({
         setDescription(partida.description || "");
         setPlayerLimit(partida.playerLimit || 4);
         setCreatorParticipates(partida.creatorParticipates ?? true);
+
         setLocation(partida.location || "Aldea Lúdica");
 
         // Hora de inicio
@@ -267,20 +268,20 @@ export default function ModalPartida({
     function handleSaveClick() {
         const errors = [];
         if (!title) errors.push("Título");
-
+    
         const start = parseInt(startHour) * 60 + parseInt(startMinute);
         const end = parseInt(endHour) * 60 + parseInt(endMinute);
         if (end <= start) {
             errors.push("Hora fin <= Hora inicio");
         }
-
+    
         const pl = parseInt(playerLimit);
         if (pl < 2 || pl > 50) {
             errors.push("Límite de jugadores fuera de rango");
         }
-
+    
         if (!location) errors.push("Ubicación");
-
+    
         if (errors.length > 0) {
             alert(
                 "Faltan o son inválidos los siguientes campos: " +
@@ -288,7 +289,39 @@ export default function ModalPartida({
             );
             return;
         }
-
+    
+        // Copia de participantes
+        let updatedParticipants = [...participants];
+    
+        // Buscar si el usuario actual ya está en la lista
+        const currentIndex = updatedParticipants.findIndex((p) => {
+            const id = p._id?.toString?.() ?? p?.toString?.();
+            return id === currentUserId;
+        });
+    
+        const isAlreadyIn = currentIndex !== -1;
+    
+        // Si el checkbox está marcado y el usuario no está, lo añadimos
+        if ((isCreator || isAdmin) && creatorParticipates && !isAlreadyIn) {
+            updatedParticipants.push(currentUserId);
+        }
+    
+        // Si el checkbox está desmarcado y el usuario está, lo eliminamos
+        if ((isCreator || isAdmin) && !creatorParticipates && isAlreadyIn) {
+            updatedParticipants.splice(currentIndex, 1);
+        }
+    
+        // Limpieza adicional: si el creador ha desmarcado el check, asegúrate de que no quede en la lista
+        const creatorId = partida?.creatorId?.toString?.() ?? currentUserId?.toString?.();
+        const cleanParticipants = updatedParticipants.filter((p) => {
+            const id = p._id?.toString?.() ?? p?.toString?.();
+            if (!creatorParticipates && id === creatorId) {
+                return false;
+            }
+            return true;
+        });
+        
+    
         const newPartida = {
             id: partida?.id,
             title,
@@ -296,23 +329,18 @@ export default function ModalPartida({
             gameDetails: selectedGameDetails || null,
             description,
             date: formatDate(date || new Date(partida?.date)),
-            startTime: `${startHour.padStart(2, "0")}:${startMinute.padStart(
-                2,
-                "0"
-            )}`,
-            endTime: `${endHour.padStart(2, "0")}:${endMinute.padStart(
-                2,
-                "0"
-            )}`,
+            startTime: `${startHour.padStart(2, "0")}:${startMinute.padStart(2, "0")}`,
+            endTime: `${endHour.padStart(2, "0")}:${endMinute.padStart(2, "0")}`,
             playerLimit: pl,
             creatorParticipates,
             location,
             creatorId: currentUserId,
-            participants,
+            participants: cleanParticipants,
         };
+    
         onSave(newPartida);
     }
-
+    
     function handleDeleteClick() {
         if (!partida?.id) return;
         setShowDeleteConfirm(true);
@@ -373,8 +401,8 @@ export default function ModalPartida({
         <div className={styles["modal-overlay"]}>
             <div className={styles["modal-content"]}>
                 {/* Botón de cierre (aspa) */}
-                <button 
-                    className={styles["close-button"]} 
+                <button
+                    className={styles["close-button"]}
                     onClick={onClose}
                     aria-label="Cerrar"
                 >
@@ -579,21 +607,53 @@ export default function ModalPartida({
 
                         <div className={styles["form-group"]}>
                             <label>&nbsp;</label>
-                            <div>
-                                <input
-                                    type="checkbox"
-                                    id="creatorParticipates"
-                                    checked={creatorParticipates}
-                                    onChange={(e) =>
-                                        setCreatorParticipates(e.target.checked)
-                                    }
-                                    disabled={isFull}
-                                />
-                                <label htmlFor="creatorParticipates">
-                                    Participaré en la partida
-                                </label>
-                            </div>
+                            {isCreator ? (
+                                <div>
+                                    <input
+                                        type="checkbox"
+                                        id="creatorParticipates"
+                                        checked={creatorParticipates}
+                                        onChange={(e) =>
+                                            setCreatorParticipates(e.target.checked)
+                                        }
+                                        disabled={isFull}
+                                    />
+                                    <label htmlFor="creatorParticipates">
+                                        Participaré en la partida
+                                    </label>
+                                </div>
+                            ) : isAdmin ? (
+                                <div>
+                                    {isParticipant ? (
+                                        <button
+                                            type="button"
+                                            className={styles["cancel-button"]}
+                                            onClick={() =>
+                                                setParticipants(participants.filter((p) => {
+                                                    const id = p._id ? p._id.toString() : p.toString();
+                                                    return id !== currentUserId;
+                                                }))
+                                            }
+                                            disabled={isFull}
+                                        >
+                                            Borrarme de la partida
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            className={styles["join-button"]}
+                                            onClick={() =>
+                                                setParticipants([...participants, currentUserId])
+                                            }
+                                            disabled={isFull}
+                                        >
+                                            Apuntarme a la partida
+                                        </button>
+                                    )}
+                                </div>
+                            ) : null}
                         </div>
+
 
                         <div className={styles["form-group"]}>
                             <label>Dónde será la partida</label>
@@ -618,9 +678,8 @@ export default function ModalPartida({
                 {/* BOTONES */}
                 <div className={styles["modal-actions"]}>
                     {/* Botón verde para unirse => SOLO modo "join" */}
-                    {mode === "join" &&
+                    {(mode === "join" || (mode === "edit" && isAdmin)) &&
                         isLoggedIn &&
-                        !isCreator &&
                         !isParticipant &&
                         !isFull && (
                             <button
@@ -765,13 +824,13 @@ export default function ModalPartida({
                         </div>
                     </div>
                 )}
-            {/* Botón para ir a la página de detalles */}
-            <button
-                onClick={handleGoToDetails}
-                className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
-            >
-                Ver Detalles de la Partida
-            </button>
+                {/* Botón para ir a la página de detalles */}
+                <button
+                    onClick={handleGoToDetails}
+                    className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
+                >
+                    Ver Detalles de la Partida
+                </button>
             </div>
         </div>
     );
