@@ -1,52 +1,47 @@
 // pages/api/game-details.js
-import { MongoClient } from "mongodb";
+import dbConnect from "../../lib/dbConnect";
+import Game from "../../models/Game";
 import { parseStringPromise } from "xml2js";
-
-const MONGODB_URI = process.env.MONGODB_URI;
-const MONGODB_DB = process.env.MONGODB_DB;
-
-let cachedClient = null;
-let cachedDb = null;
-
-async function connectToDatabase() {
-  if (cachedClient && cachedDb) {
-    return { client: cachedClient, db: cachedDb };
-  }
-  const client = await MongoClient.connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-  const db = client.db(MONGODB_DB);
-  cachedClient = client;
-  cachedDb = db;
-  return { client, db };
-}
 
 export default async function handler(req, res) {
   const { bggId } = req.query;
   if (!bggId) return res.status(400).json({ error: "Falta bggId" });
-  try {
-    const { db } = await connectToDatabase();
-    const collection = db.collection("bggGames");
 
-    // Consultar si el juego ya existe en la colección
-    let game = await collection.findOne({ bggId });
+  try {
+    await dbConnect();
+
+    // Buscar en MongoDB por bggId
+    let game = await Game.findOne({ bggId });
     if (game) {
       return res.status(200).json({ details: game });
-    } else {
-      // Si no existe, llamamos a la API de BGG
-      const response = await fetch(
-        `https://boardgamegeek.com/xmlapi2/thing?id=${bggId}`
-      );
-      const xml = await response.text();
-      const details = await parseBGGThingXML(xml);
-      // Incluimos el bggId en los detalles
-      details.bggId = bggId;
-      // Guardar en MongoDB
-      await collection.insertOne(details);
-      return res.status(200).json({ details });
     }
+
+    // Si no existe, llamamos a la API de BGG
+    const response = await fetch(`https://boardgamegeek.com/xmlapi2/thing?id=${bggId}`, {
+        credentials: 'include' // Añadir esta línea
+    });
+    const xml = await response.text();
+    const parsed = await parseBGGThingXML(xml);
+
+    // Construimos el nuevo documento
+    const newGame = new Game({
+      bggId,
+      name: parsed.name || "Sin nombre",
+      image: parsed.image || null,
+      yearPublished: parsed.year || "Desconocido",
+      minPlayers: parsed.minPlayers || 2,
+      maxPlayers: parsed.maxPlayers || 4,
+      playingTime: parsed.playingTime || 60,
+      description: parsed.description || "",
+      categories: parsed.categories || [],
+      mechanics: parsed.mechanics || [],
+      url: `https://boardgamegeek.com/boardgame/${bggId}`,
+    });
+
+    await newGame.save();
+    return res.status(200).json({ details: newGame });
   } catch (err) {
+    console.error("Error al obtener/guardar juego:", err);
     return res.status(500).json({ error: err.message });
   }
 }
@@ -54,35 +49,32 @@ export default async function handler(req, res) {
 async function parseBGGThingXML(xml) {
   try {
     const result = await parseStringPromise(xml);
-    if (result.items && result.items.item && result.items.item.length > 0) {
-      const item = result.items.item[0];
-      return {
-        name:
-          item.name && item.name[0] && item.name[0].$.value
-            ? item.name[0].$.value
-            : "Sin nombre",
-        year:
-          item.yearpublished &&
-          item.yearpublished[0] &&
-          item.yearpublished[0].$.value
-            ? item.yearpublished[0].$.value
-            : "Desconocido",
-        image: item.image ? item.image[0] : null,
-        // Ejemplo: extraer "weight" del objeto ratings
-        weight:
-          item.statistics &&
-          item.statistics[0] &&
-          item.statistics[0].ratings &&
-          item.statistics[0].ratings[0] &&
-          item.statistics[0].ratings[0].average &&
-          item.statistics[0].ratings[0].average[0]
-            ? item.statistics[0].ratings[0].average[0]
-            : null,
-        // Puedes incluir más propiedades según necesites
-      };
-    }
-    return {};
+    const item = result?.items?.item?.[0];
+    if (!item) return {};
+
+    return {
+      name: item.name?.[0]?.$?.value || "",
+      year: item.yearpublished?.[0]?.$?.value || "",
+      image: item.image?.[0] || "",
+      description: item.description?.[0] || "",
+      minPlayers: item.minplayers?.[0]?.$?.value
+        ? parseInt(item.minplayers[0].$.value)
+        : 2,
+      maxPlayers: item.maxplayers?.[0]?.$?.value
+        ? parseInt(item.maxplayers[0].$.value)
+        : 4,
+      playingTime: item.playingtime?.[0]?.$?.value
+        ? parseInt(item.playingtime[0].$.value)
+        : 60,
+      categories: (item.link || [])
+        .filter((l) => l.$.type === "boardgamecategory")
+        .map((l) => l.$.value),
+      mechanics: (item.link || [])
+        .filter((l) => l.$.type === "boardgamemechanic")
+        .map((l) => l.$.value),
+    };
   } catch (err) {
+    console.error("Error parseando XML BGG:", err);
     return {};
   }
 }

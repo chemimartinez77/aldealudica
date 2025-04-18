@@ -5,6 +5,7 @@ import locations from "../data/locations.json"; // ["Aldea Lúdica"]
 import styles from "../styles/ModalPartida.module.css";
 import SearchResultsModal from "./SearchResultsModal";
 import ImagePreviewModal from "./ImagePreviewModal";
+import { useRouter } from 'next/router'; // Importar useRouter
 
 export default function ModalPartida({
     mode, // "create", "edit", "view", "join"
@@ -15,7 +16,15 @@ export default function ModalPartida({
     onSave,
     onDelete,
     isLoggedIn,
+    isAdmin, // <- Añadido
 }) {
+    const router = useRouter(); // Usar useRouter para la navegación
+        // Define the handleGoToDetails function
+    const handleGoToDetails = () => {
+        if (partida && partida.id) {
+            router.push(`/partidas/${partida.id}`); // Redirigir a la página de detalles
+        }
+    };
     // Campos del formulario
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -109,6 +118,18 @@ export default function ModalPartida({
         setGameSearch(partida.game || "");
         if (partida.gameDetails) {
             setSelectedGameDetails(partida.gameDetails);
+        } else if (partida.game && partida.game.trim() !== "") {
+            // Si tenemos el nombre del juego pero no los detalles, intentamos buscarlos
+            console.log("Buscando detalles para el juego:", partida.game);
+            fetch(`/api/search-game-by-name?name=${encodeURIComponent(partida.game)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.game) {
+                        console.log("Encontrados detalles del juego:", data.game);
+                        setSelectedGameDetails(data.game);
+                    }
+                })
+                .catch(err => console.error("Error al buscar detalles del juego:", err));
         }
 
         setParticipants(partida.participants || []);
@@ -120,7 +141,9 @@ export default function ModalPartida({
             (mode === "edit" || mode === "view" || mode === "join") &&
             partida?.id
         ) {
-            fetch(`/api/partidas/${partida.id}`)
+            fetch(`/api/partidas/${partida.id}`, {
+                credentials: 'include' // Añadir esta línea
+            })
                 .then((res) => res.json())
                 .then((data) => {
                     if (data.partida) {
@@ -261,7 +284,7 @@ export default function ModalPartida({
         if (errors.length > 0) {
             alert(
                 "Faltan o son inválidos los siguientes campos: " +
-                    errors.join(", ")
+                errors.join(", ")
             );
             return;
         }
@@ -287,7 +310,6 @@ export default function ModalPartida({
             creatorId: currentUserId,
             participants,
         };
-        console.log("selectedGameDetails: ", selectedGameDetails);
         onSave(newPartida);
     }
 
@@ -312,7 +334,6 @@ export default function ModalPartida({
 
     // Render de info en solo lectura (para view/join)
     function renderReadOnlyInfo() {
-        console.log("Detalles del juego:", selectedGameDetails);
         return (
             <div className={styles["read-only-info"]}>
                 {selectedGameDetails?.image && (
@@ -344,36 +365,22 @@ export default function ModalPartida({
             </div>
         );
     }
-            
+
     const isFormMode = mode === "create" || mode === "edit";
     const isReadOnlyMode = mode === "view" || mode === "join";
-
-    // Debug: verifica el modo y condiciones
-    useEffect(() => {
-        console.log("ModalPartida debug =>", {
-            mode,
-            isLoggedIn,
-            isCreator,
-            isParticipant,
-            isFull,
-            creatorId: partida?.creatorId,
-            currentUserId,
-            participants,
-        });
-    }, [
-        mode,
-        isLoggedIn,
-        isCreator,
-        isParticipant,
-        isFull,
-        partida?.creatorId,
-        currentUserId,
-        participants,
-    ]);
 
     return (
         <div className={styles["modal-overlay"]}>
             <div className={styles["modal-content"]}>
+                {/* Botón de cierre (aspa) */}
+                <button 
+                    className={styles["close-button"]} 
+                    onClick={onClose}
+                    aria-label="Cerrar"
+                >
+                    &times;
+                </button>
+
                 {/* Encabezado: puedes eliminar o modificar según prefieras */}
                 {/* Encabezado con franja azul */}
                 <div className={styles["modal-header"]}>
@@ -660,7 +667,7 @@ export default function ModalPartida({
                     )}
 
                     {/* Botón eliminar => solo edit + eres el creador */}
-                    {mode === "edit" && isCreator && (
+                    {mode === "edit" && (isCreator || isAdmin) && (
                         <button
                             type="button"
                             onClick={handleDeleteClick}
@@ -758,6 +765,13 @@ export default function ModalPartida({
                         </div>
                     </div>
                 )}
+            {/* Botón para ir a la página de detalles */}
+            <button
+                onClick={handleGoToDetails}
+                className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
+            >
+                Ver Detalles de la Partida
+            </button>
             </div>
         </div>
     );

@@ -2,3 +2,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Estilos específicos para vista móvil (ancho ≤ 500px) */
+@media (max-width: 500px) {
+  /* Asegurarse de que la celda de fecha tenga comportamiento normal */
+  .rbc-agenda-table {
+    table-layout: auto !important;
+  }
+
+  .rbc-agenda-table .rbc-header:first-child,
+  .rbc-agenda-view .rbc-agenda-content td.rbc-agenda-date-cell {
+    white-space: normal !important;
+    min-width: 90px !important;
+    max-width: 120px;
+    word-break: normal !important;
+    vertical-align: top;
+    padding: 4px 6px;
+  }
+}

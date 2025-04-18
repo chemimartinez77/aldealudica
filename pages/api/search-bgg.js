@@ -26,7 +26,10 @@ export default async function handler(req, res) {
   try {
     // 1) Llamada a la API de BGG
     const response = await fetch(
-      `https://boardgamegeek.com/xmlapi2/search?query=${encodeURIComponent(query)}`
+      `https://boardgamegeek.com/xmlapi2/search?query=${encodeURIComponent(query)}`,
+      {
+        credentials: 'include' // Añadir esta línea
+      }
     );
     const text = await response.text();
     let results = await parseBGGXML(text);

@@ -1,0 +1,431 @@
+/* Estilos personalizados para la página de detalles de partida */
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+/* Reducir aún más el tamaño de los encabezados de las tarjetas */
+.cardHeader {
+  background-color: #0a2463;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem 0.375rem 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.headerSaveButton {
+  background-color: #ffffff;
+  color: #0a2463;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.headerSaveButton:hover {
+  background-color: #f0f0f0;
+}
+
+.cardTitle {
+  font-size: 1.1rem; /* Reducido aún más */
+  font-weight: 600;
+  margin: 0;
+}
+
+.sectionTitle {
+  font-size: 1rem; /* Reducido aún más */
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #0a2463;
+}
+
+/* Ajustar el espaciado interno de las tarjetas */
+.cardBody {
+  padding: 0.75rem; /* Reducido aún más */
+}
+
+/* Ajustar el tamaño de la primera tarjeta */
+.card:first-child .cardHeader {
+  padding: 0.6rem 1rem; /* Ligeramente más grande que las demás pero aún reducido */
+}
+
+.card:first-child .cardTitle {
+  font-size: 1.2rem; /* Ligeramente más grande que las demás pero aún reducido */
+}
+
+/* Reducir el espacio entre las tarjetas */
+.card {
+  margin-bottom: 1rem; /* Reducido de 1.5rem o similar */
+}
+
+/* Ajustar el espaciado de los elementos de detalle */
+.detailItem {
+  margin-bottom: 0.5rem; /* Reducido */
+}
+
+.detailLabel {
+  font-size: 0.9rem; /* Reducido */
+}
+
+.cardBody {
+    padding: 20px;
+}
+
+.sectionTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #1e3a8a;
+}
+
+.detailsGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+@media (min-width: 768px) {
+    .detailsGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.detailItem {
+    margin-bottom: 12px;
+}
+
+.detailLabel {
+    font-weight: 500;
+    color: #4b5563;
+    margin-bottom: 4px;
+}
+
+.imageContainer {
+    position: relative;
+    width: 100%;
+    height: 250px;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s ease;
+}
+
+.imageContainer:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.inputGroup {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.input {
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.9rem;
+    transition: background-color 0.5s ease, border-color 0.5s ease;
+  }
+  
+  .numberInput {
+    width: 100px;
+  }
+  
+
+.fileInput {
+    display: block;
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.button {
+    background-color: #2563eb;
+    color: white;
+    font-weight: 500;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.button:hover {
+    background-color: #1d4ed8;
+}
+
+.saveButton {
+    display: block;
+    margin-left: auto;
+}
+
+.imagesGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+@media (min-width: 768px) {
+    .imagesGrid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.imageBox {
+    position: relative;
+    height: 160px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+.spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.spinnerCircle {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.uploadingIndicator {
+    display: flex;
+    align-items: center;
+    color: #2563eb;
+    margin-top: 8px;
+}
+
+.uploadingSpinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(37, 99, 235, 0.3);
+    border-top: 2px solid #2563eb;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: spin 1s linear infinite;
+}
+
+.imageOverlayButtons {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    gap: 6px;
+    z-index: 2;
+}
+
+.iconButton {
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.iconButton:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.imageWrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+.imageOverlay {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .imageActionButton {
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    color: white;
+    padding: 4px 8px;
+    margin: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s ease;
+  }
+  
+  .imageActionButton:hover {
+    background: rgba(0, 0, 0, 0.8);
+  }
+
+.fadingImage {
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+  pointer-events: none;
+}
+
+.uploadContainer {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.uploadButton {
+  display: flex;
+  align-items: center;
+  background-color: #2563eb;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.uploadButton:hover {
+  background-color: #1d4ed8;
+}
+
+.uploadButton:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+.uploadIcon {
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.hiddenFileInput {
+  opacity: 0;
+  width: 0.1px;
+  height: 0.1px;
+  position: absolute;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.actionContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+/* Eliminar los estilos que están causando problemas */
+.fixedButtonContainer {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 100;
+}
+
+/* Modificar los estilos del botón de guardar */
+.saveButton {
+  background-color: #0a2463;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  float: right;
+  margin: 0 20px 20px 0;
+}
+
+.saveButton:hover {
+  background-color: #0d2d7a;
+}
+
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #38a169; /* Verde tipo Salesforce */
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    animation: slideAndFade 4s ease-in-out forwards;
+    z-index: 9999;
+  }
+  
+  @keyframes slideAndFade {
+    0% {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+    10%, 80% {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+  }
+  
+  .highlighted {
+    background-color: #d1fae5;
+    border: 1px solid #34d399;
+    transition: none;
+  }
+  
+  .fadeout {
+    animation: fadeOutInputs 2s ease-out forwards;
+  }
+  
+  @keyframes fadeOutInputs {
+    0% {
+      background-color: #d1fae5;
+      border-color: #34d399;
+    }
+    100% {
+      background-color: transparent;     /* o el color exacto de fondo que uses */
+      border-color: #d1d5db;       /* el color de borde original */
+    }
+  }
+  
+  
