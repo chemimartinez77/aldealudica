@@ -14,15 +14,15 @@ webpush.setVapidDetails(
 
 export default async function handler(req, res) {
     await dbConnect();
+    console.log("✅ Conectado correctamente a MongoDB");
 
     if (req.method === "GET") {
         try {
-            // Asegúrate de que estás haciendo populate de gameDetails
             const partidas = await Partida.find({}).populate("gameDetails");
-            return res.status(200).json({ partidas });
+            return res.status(200).json({ partidas: partidas || [] });
         } catch (error) {
-            console.error(error);
-            return res.status(500).json({ error: "Error al obtener partidas" });
+            console.error("Error en GET /api/partidas", error);
+            return res.status(200).json({ partidas: [] }); // <-- Así no rompe en el cliente
         }
     }
 

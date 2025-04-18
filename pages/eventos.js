@@ -26,7 +26,8 @@ export default function Eventos() {
         })
             .then((res) => res.json())
             .then((data) => {
-                setPartidas(data.partidas);
+                const partidas = data?.partidas || [];
+                setPartidas(partidas);
             })
             .catch((err) => console.error(err));
     }, []);
