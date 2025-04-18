@@ -6,6 +6,7 @@ import { getSession } from 'next-auth/react';
 import { Eye, Trash2 } from 'lucide-react'; // <-- Importamos iconos
 import styles from '../../../styles/PartidaDetails.module.css';
 import ConfirmDialog from '../../../components/ConfirmDialog';
+import Layout from '../../../components/Layout'; // Importamos el componente Layout
 
 export default function PartidaPage() {
     const router = useRouter();
@@ -21,6 +22,11 @@ export default function PartidaPage() {
 
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [imageToDelete, setImageToDelete] = useState(null);
+    const [highlightedInputs, setHighlightedInputs] = useState(false);
+    const [fadeInputs, setFadeInputs] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastType, setToastType] = useState("success"); // "success" | "error"
+
 
     useEffect(() => {
         if (id) fetchPartida();
@@ -99,21 +105,21 @@ export default function PartidaPage() {
     // Eliminar imagen (marcar isDeleted = true) con confirmación
     // Añade un estado para controlar qué imagen está en proceso de eliminación
     const [fadingImageId, setFadingImageId] = useState(null);
-    
+
     // Modifica la función handleDeleteImage para incluir el efecto de fundido
     const handleDeleteImage = async (publicId) => {
         // Ya no aplicamos el fundido aquí, solo mostramos el diálogo
         setImageToDelete(publicId);
         setShowConfirmDialog(true);
     };
-    
+
     const confirmDeleteImage = async () => {
         if (!imageToDelete) return;
-    
+
         // Aplicamos el fundido después de la confirmación
         setFadingImageId(imageToDelete);
         setShowConfirmDialog(false);
-        
+
         try {
             const res = await fetch(`/api/partidas/${id}/images`, {
                 method: 'DELETE',
@@ -122,7 +128,7 @@ export default function PartidaPage() {
                 body: JSON.stringify({ publicId: imageToDelete }),
             });
             const updateResult = await res.json();
-            
+
             if (updateResult.error) {
                 alert('Error al eliminar la imagen: ' + updateResult.error);
                 setFadingImageId(null); // Restaura la opacidad si hay error
@@ -144,28 +150,53 @@ export default function PartidaPage() {
 
     const handleSave = async () => {
         try {
+            const dataToSend = {
+                realDuration: { hours, minutes },
+                scores: scores.map(score => ({
+                    player: score.player,
+                    score: parseInt(score.score) || 0
+                })),
+                winner:
+                    scores.length > 0
+                        ? scores.reduce((prev, current) =>
+                            (prev.score > current.score) ? prev : current
+                        ).player
+                        : null,
+            };
+
             const res = await fetch(`/api/partidas/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({
-                    realDuration: { hours, minutes },
-                    scores,
-                    // Determinamos el winner si hay puntuaciones
-                    winner:
-                        scores.length > 0
-                            ? scores.reduce((prev, current) =>
-                                prev.score > current.score ? prev : current
-                            ).player
-                            : null,
-                }),
+                body: JSON.stringify(dataToSend),
             });
 
             if (res.ok) {
-                router.push('/partidas');
+                await fetchPartida(); // recarga sin redirigir
+                setHighlightedInputs(true);
+                setFadeInputs(false);
+                setTimeout(() => {
+                    setFadeInputs(true); // lanza animación
+                }, 2000);
+                setTimeout(() => {
+                    setHighlightedInputs(false); // limpia
+                    setFadeInputs(false);
+                }, 4000);
+                setToastMessage("✅ Resultados guardados correctamente");
+                setToastType("success");
+                setTimeout(() => setToastMessage(""), 4000);
+
+            } else {
+                const errorData = await res.json().catch(() => ({}));
+                setToastMessage("❌ " + (errorData.error || 'Error al guardar los resultados'));
+                setToastType("error");
+                setTimeout(() => setToastMessage(""), 4000);
+
             }
         } catch (error) {
-            console.error(error);
+            setToastMessage("❌ " + 'Error al guardar los resultados: ' + (error.message || 'Error desconocido'));
+            setToastType("error");
+            setTimeout(() => setToastMessage(""), 4000);
         }
     };
 
@@ -185,220 +216,250 @@ export default function PartidaPage() {
     };
 
     return (
-        <div className={styles.container}>
-            <div className={styles.card}>
-                <div className={styles.cardHeader}>
-                    <h1 className={styles.cardTitle}>{partida.title}</h1>
+        <Layout>
+            {toastMessage && (
+                <div className={`${styles.toast} ${styles[toastType]}`}>
+                    {toastMessage}
                 </div>
+            )}
+            <div className={styles.container}>
+                <div className={styles.card}>
+                    <div className={styles.cardHeader}>
+                        <h1 className={styles.cardTitle}>{partida.title}</h1>
+                        <button
+                            onClick={handleSave}
+                            className={`${styles.button} ${styles.headerSaveButton}`}
+                        >
+                            Guardar resultados
+                        </button>
+                    </div>
 
-                {/* Info general */}
-                <div className={styles.cardBody}>
-                    <div className={styles.detailsGrid}>
-                        <div>
-                            <h2 className={styles.sectionTitle}>Detalles de la partida</h2>
-                            <div className={styles.detailItem}>
-                                <p className={styles.detailLabel}>Fecha:</p>
-                                <p>{formatDate(partida.date)}</p>
-                            </div>
-                            <div className={styles.detailItem}>
-                                <p className={styles.detailLabel}>Horario:</p>
-                                <p>
-                                    {partida.startTime} - {partida.endTime}
-                                </p>
-                            </div>
-                            <div className={styles.detailItem}>
-                                <p className={styles.detailLabel}>Ubicación:</p>
-                                <p>{partida.location}</p>
-                            </div>
-                            <div className={styles.detailItem}>
-                                <p className={styles.detailLabel}>Límite de jugadores:</p>
-                                <p>{partida.playerLimit}</p>
-                            </div>
-                            <div className={styles.detailItem}>
-                                <p className={styles.detailLabel}>Participantes:</p>
-                                <p>
-                                    {partida.participants.length} / {partida.playerLimit}
-                                </p>
-                                <ul className="list-disc pl-5 mt-1">
-                                    {partida.participants.map((participant) => (
-                                        <li key={participant._id}>{participant.name}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div>
-                            {partida.gameDetails?.image && (
-                                <div className={styles.imageContainer}>
-                                    <Image
-                                        src={partida.gameDetails.image}
-                                        alt={partida.title}
-                                        fill
-                                        style={{ objectFit: 'contain' }}
-                                    />
-                                </div>
-                            )}
-
-                            {partida.description && (
+                    {/* Info general */}
+                    <div className={styles.cardBody}>
+                        <div className={styles.detailsGrid}>
+                            <div>
+                                <h2 className={styles.sectionTitle}>Detalles de la partida</h2>
                                 <div className={styles.detailItem}>
-                                    <p className={styles.detailLabel}>Descripción:</p>
-                                    <p>{partida.description}</p>
+                                    <p className={styles.detailLabel}>Fecha:</p>
+                                    <p>{formatDate(partida.date)}</p>
                                 </div>
-                            )}
+                                <div className={styles.detailItem}>
+                                    <p className={styles.detailLabel}>Horario:</p>
+                                    <p>
+                                        {partida.startTime} - {partida.endTime}
+                                    </p>
+                                </div>
+                                <div className={styles.detailItem}>
+                                    <p className={styles.detailLabel}>Ubicación:</p>
+                                    <p>{partida.location}</p>
+                                </div>
+                                <div className={styles.detailItem}>
+                                    <p className={styles.detailLabel}>Límite de jugadores:</p>
+                                    <p>{partida.playerLimit}</p>
+                                </div>
+                                <div className={styles.detailItem}>
+                                    <p className={styles.detailLabel}>Participantes:</p>
+                                    <p>
+                                        {partida.participants.length} / {partida.playerLimit}
+                                    </p>
+                                    <ul className="list-disc pl-5 mt-1">
+                                        {partida.participants.map((participant) => (
+                                            <li key={participant._id}>{participant.name}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div>
+                                {partida.gameDetails?.image && (
+                                    <div
+                                        className={styles.imageContainer}
+                                        onClick={() => window.open(partida.gameDetails.image, '_blank')}
+                                        style={{ cursor: 'pointer' }}
+                                        title="Haz clic para ver la imagen completa"
+                                    >
+                                        <Image
+                                            src={partida.gameDetails.image}
+                                            alt={partida.title}
+                                            fill
+                                            style={{ objectFit: 'contain' }}
+                                        />
+                                    </div>
+                                )}
+
+                                {partida.description && (
+                                    <div className={styles.detailItem}>
+                                        <p className={styles.detailLabel}>Descripción:</p>
+                                        <p>{partida.description}</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Duración real */}
-            <div className={styles.card}>
-                <div className={styles.cardHeader}>
-                    <h2 className={styles.cardTitle}>Duración real</h2>
-                </div>
-                <div className={styles.cardBody}>
-                    <div className={styles.inputGroup}>
-                        <div>
-                            <label className={styles.detailLabel}>Horas</label>
-                            <input
-                                type="number"
-                                value={hours}
-                                onChange={(e) => setHours(parseInt(e.target.value) || 0)}
-                                className={`${styles.input} ${styles.numberInput}`}
-                                min="0"
-                            />
-                        </div>
-                        <div>
-                            <label className={styles.detailLabel}>Minutos</label>
-                            <input
-                                type="number"
-                                value={minutes}
-                                onChange={(e) => setMinutes(parseInt(e.target.value) || 0)}
-                                className={`${styles.input} ${styles.numberInput}`}
-                                min="0"
-                                max="59"
-                            />
+                {/* Duración real */}
+                <div className={styles.card}>
+                    <div className={styles.cardHeader}>
+                        <h2 className={styles.cardTitle}>Duración real</h2>
+                    </div>
+                    <div className={styles.cardBody}>
+                        <div className={styles.inputGroup}>
+                            <div>
+                                <label className={styles.detailLabel}>Horas</label>
+                                <input
+                                    type="number"
+                                    value={hours}
+                                    onChange={(e) => setHours(parseInt(e.target.value) || 0)}
+                                    className={`
+                                        ${styles.input}
+                                        ${styles.numberInput}
+                                        ${highlightedInputs ? styles.highlighted : ""}
+                                        ${fadeInputs ? styles.fadeout : ""}
+                                      `}
+                                    min="0"
+                                />
+                            </div>
+                            <div>
+                                <label className={styles.detailLabel}>Minutos</label>
+                                <input
+                                    type="number"
+                                    value={minutes}
+                                    onChange={(e) => setMinutes(parseInt(e.target.value) || 0)}
+                                    className={`
+                                        ${styles.input}
+                                        ${styles.numberInput}
+                                        ${highlightedInputs ? styles.highlighted : ""}
+                                        ${fadeInputs ? styles.fadeout : ""}
+                                      `}
+                                      
+                                    min="0"
+                                    max="59"
+                                />
+
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Puntuaciones */}
-            <div className={styles.card}>
-                <div className={styles.cardHeader}>
-                    <h2 className={styles.cardTitle}>Puntuaciones</h2>
-                </div>
-                <div className={styles.cardBody}>
-                    {partida.participants.map((participant) => (
-                        <div key={participant._id} className={styles.inputGroup}>
-                            <span className={styles.detailLabel}>{participant.name}</span>
-                            <input
-                                type="number"
-                                value={
-                                    scores.find((s) => s.player === participant._id)?.score || 0
-                                }
-                                onChange={(e) => {
-                                    const newScores = [...scores];
-                                    const index = newScores.findIndex(
-                                        (s) => s.player === participant._id
-                                    );
-                                    if (index >= 0) {
-                                        newScores[index].score = parseInt(e.target.value) || 0;
-                                    } else {
-                                        newScores.push({
-                                            player: participant._id,
-                                            score: parseInt(e.target.value) || 0,
-                                        });
+                {/* Puntuaciones */}
+                <div className={styles.card}>
+                    <div className={styles.cardHeader}>
+                        <h2 className={styles.cardTitle}>Puntuaciones</h2>
+                    </div>
+                    <div className={styles.cardBody}>
+                        {partida.participants.map((participant) => (
+                            <div key={participant._id} className={styles.inputGroup}>
+                                <span className={styles.detailLabel}>{participant.name}</span>
+                                <input
+                                    type="number"
+                                    value={
+                                        scores.find((s) => s.player === participant._id)?.score || 0
                                     }
-                                    setScores(newScores);
-                                }}
-                                className={`${styles.input} ${styles.numberInput}`}
-                            />
-                        </div>
-                    ))}
+                                    onChange={(e) => {
+                                        const newScores = [...scores];
+                                        const index = newScores.findIndex(
+                                            (s) => s.player === participant._id
+                                        );
+                                        if (index >= 0) {
+                                            newScores[index].score = parseInt(e.target.value) || 0;
+                                        } else {
+                                            newScores.push({
+                                                player: participant._id,
+                                                score: parseInt(e.target.value) || 0,
+                                            });
+                                        }
+                                        setScores(newScores);
+                                    }}
+                                    className={`
+                                        ${styles.input}
+                                        ${styles.numberInput}
+                                        ${highlightedInputs ? styles.highlighted : ""}
+                                        ${fadeInputs ? styles.fadeout : ""}
+                                      `}
+                                      
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            </div>
 
-            {/* Imágenes */}
-            <div className={styles.card}>
-                <div className={styles.cardHeader}>
-                    <h2 className={styles.cardTitle}>Imágenes</h2>
-                </div>
-                <div className={styles.cardBody}>
-                    {/* Mapeo de imágenes */}
-                    <div className={styles.imagesGrid}>
-                        {images && images.length > 0 ? (
-                            images
-                                .filter((image) => !image.isDeleted) // ocultar las eliminadas
-                                .map((image, index) => {
-                                    const imageUrl = typeof image === 'string' ? image : image.url;
-                                    // Corrige esta línea - verifica si el publicId coincide con fadingImageId
-                                    const isFading = fadingImageId && image.publicId === fadingImageId;
-                                
-                                    return (
-                                        <div key={index} className={styles.imageBox}>
-                                            <div className={`${styles.imageWrapper} ${isFading ? styles.fadingImage : ''}`}>
-                                                <Image
-                                                    src={imageUrl}
-                                                    alt={`Imagen ${index + 1}`}
-                                                    fill
-                                                    style={{ objectFit: 'cover' }}
-                                                />
-                                                {/* Overlay con iconos */}
-                                                <div className={styles.imageOverlay}>
-                                                    <button
-                                                        className={styles.imageActionButton}
-                                                        onClick={() => window.open(imageUrl, '_blank')}
-                                                        title="Ver imagen en grande"
-                                                    >
-                                                        <Eye size={20} />
-                                                    </button>
-                                                    <button
-                                                        className={styles.imageActionButton}
-                                                        onClick={() => handleDeleteImage(image.publicId)}
-                                                        title="Eliminar lógicamente la imagen"
-                                                        disabled={isFading}
-                                                    >
-                                                        <Trash2 size={20} />
-                                                    </button>
+                {/* Imágenes */}
+                <div className={styles.card}>
+                    <div className={styles.cardHeader}>
+                        <h2 className={styles.cardTitle}>Imágenes</h2>
+                    </div>
+                    <div className={styles.cardBody}>
+                        {/* Mapeo de imágenes */}
+                        <div className={styles.imagesGrid}>
+                            {images && images.length > 0 ? (
+                                images
+                                    .filter((image) => !image.isDeleted) // ocultar las eliminadas
+                                    .map((image, index) => {
+                                        const imageUrl = typeof image === 'string' ? image : image.url;
+                                        // Corrige esta línea - verifica si el publicId coincide con fadingImageId
+                                        const isFading = fadingImageId && image.publicId === fadingImageId;
+
+                                        return (
+                                            <div key={index} className={styles.imageBox}>
+                                                <div className={`${styles.imageWrapper} ${isFading ? styles.fadingImage : ''}`}>
+                                                    <Image
+                                                        src={imageUrl}
+                                                        alt={`Imagen ${index + 1}`}
+                                                        fill
+                                                        style={{ objectFit: 'cover' }}
+                                                    />
+                                                    {/* Overlay con iconos */}
+                                                    <div className={styles.imageOverlay}>
+                                                        <button
+                                                            className={styles.imageActionButton}
+                                                            onClick={() => window.open(imageUrl, '_blank')}
+                                                            title="Ver imagen en grande"
+                                                        >
+                                                            <Eye size={20} />
+                                                        </button>
+                                                        <button
+                                                            className={styles.imageActionButton}
+                                                            onClick={() => handleDeleteImage(image.publicId)}
+                                                            title="Eliminar lógicamente la imagen"
+                                                            disabled={isFading}
+                                                        >
+                                                            <Trash2 size={20} />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    );
-                                })
-                        ) : (
-                            <p className="text-gray-500">No hay imágenes para mostrar</p>
-                        )}
-                    </div>
-                    <div className={styles.uploadContainer}>
-                        <label htmlFor="image-upload" className={styles.uploadButton} disabled={uploading}>
-                            <span className={styles.uploadIcon}>+</span>
-                            Subir imágenes
-                        </label>
-                        <input
-                            id="image-upload"
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            disabled={uploading}
-                            className={styles.hiddenFileInput}
-                        />
-                        {uploading && (
-                            <div className={styles.uploadingIndicator}>
-                                <div className={styles.uploadingSpinner}></div>
-                                Subiendo imágenes...
-                            </div>
-                        )}
+                                        );
+                                    })
+                            ) : (
+                                <p className="text-gray-500">No hay imágenes para mostrar</p>
+                            )}
+                        </div>
+                        <div className={styles.uploadContainer}>
+                            <label htmlFor="image-upload" className={styles.uploadButton} disabled={uploading}>
+                                <span className={styles.uploadIcon}>+</span>
+                                Subir imágenes
+                            </label>
+                            <input
+                                id="image-upload"
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                disabled={uploading}
+                                className={styles.hiddenFileInput}
+                            />
+                            {uploading && (
+                                <div className={styles.uploadingIndicator}>
+                                    <div className={styles.uploadingSpinner}></div>
+                                    Subiendo imágenes...
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <button
-                onClick={handleSave}
-                className={`${styles.button} ${styles.saveButton}`}
-            >
-                Guardar resultados
-            </button>
             <ConfirmDialog
                 isOpen={showConfirmDialog}
                 onClose={() => setShowConfirmDialog(false)}
@@ -407,7 +468,7 @@ export default function PartidaPage() {
                 title="Confirmar eliminación"
                 description="¿Estás seguro de que deseas eliminar esta imagen?"
             />
-        </div>
+        </Layout>
     );
 }
 

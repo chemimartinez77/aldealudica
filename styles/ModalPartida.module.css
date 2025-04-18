@@ -357,4 +357,33 @@
       font-size: 0.9rem;
     }
   }
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: rgba(128, 128, 128, 0.5);
+  border: none;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background-color: rgba(128, 128, 128, 0.8);
+}
+
+.modal-content {
+  position: relative;
+  /* Mantén el resto de tus estilos existentes para modal-content */
+}
   

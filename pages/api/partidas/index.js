@@ -1,7 +1,6 @@
 // pages/api/partidas/index.js
 import dbConnect from "../../../lib/dbConnect";
 import Partida from "../../../models/Partida";
-import Game from "../../../models/Game"; // Asegúrate de importar el modelo Game
 import mongoose from "mongoose";
 import webpush from "web-push";
 import Subscription from "../../../models/Subscription";

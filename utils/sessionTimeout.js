@@ -2,7 +2,7 @@ import { signOut } from 'next-auth/react';
 import Router from 'next/router';
 
 // Timeout de sesión en milisegundos (3 minutos)
-const SESSION_TIMEOUT = 3 * 60 * 1000;
+const SESSION_TIMEOUT = 15 * 60 * 1000;
 
 let timeoutId = null;
 let isTimedOut = false;

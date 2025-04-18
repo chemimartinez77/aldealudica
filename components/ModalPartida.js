@@ -372,6 +372,15 @@ export default function ModalPartida({
     return (
         <div className={styles["modal-overlay"]}>
             <div className={styles["modal-content"]}>
+                {/* Botón de cierre (aspa) */}
+                <button 
+                    className={styles["close-button"]} 
+                    onClick={onClose}
+                    aria-label="Cerrar"
+                >
+                    &times;
+                </button>
+
                 {/* Encabezado: puedes eliminar o modificar según prefieras */}
                 {/* Encabezado con franja azul */}
                 <div className={styles["modal-header"]}>
