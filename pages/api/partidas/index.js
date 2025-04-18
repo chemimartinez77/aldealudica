@@ -19,10 +19,15 @@ export default async function handler(req, res) {
     if (req.method === "GET") {
         try {
             const partidas = await Partida.find({}).populate("gameDetails");
+    
+            console.log("✅ Partidas encontradas:", partidas.length);
+            console.log(partidas);
+    
             return res.status(200).json({ partidas: partidas || [] });
         } catch (error) {
-            console.error("Error en GET /api/partidas", error);
-            return res.status(200).json({ partidas: [] }); // <-- Así no rompe en el cliente
+            console.error("❌ Error en GET /api/partidas:", error);
+            // Devolver 200 evita que el cliente reviente, pero cuidado si dependes del status code
+            return res.status(200).json({ partidas: [] });
         }
     }
 
