@@ -2,7 +2,6 @@
 import dbConnect from "../../../lib/dbConnect";
 import Partida from "../../../models/Partida";
 import Game from "../../../models/Game";
-mongoose.model("Game");
 
 export default async function handler(req, res) {
   await dbConnect();
