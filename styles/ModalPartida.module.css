@@ -77,43 +77,6 @@
     gap: 0.5rem;
 }
 
-.modal-actions button {
-    background: #2b6cb0;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-.modal-actions button:hover {
-    background: #2c5282;
-}
-
-.modal-actions .cancel-button {
-    background: #a0aec0;
-    color: #1a202c;
-}
-
-.modal-actions .cancel-button:hover {
-    background: #718096;
-}
-
-.modal-actions .delete-button {
-    background: #e53e3e;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-.modal-actions .delete-button:hover {
-    background: #c53030;
-}
-
 /* Contenedor de resultados de búsqueda (modal flotante con scroll largo) */
 .search-results-popover {
     position: absolute;
@@ -257,52 +220,6 @@
     z-index: 9999;
   }
   
-  .delete-content {
-    background: #fff;
-    padding: 1.5rem 2rem;
-    border-radius: 8px;
-    max-width: 400px;
-    width: 90%;
-    text-align: center;
-  }
-
-  .delete-content .delete-buttons {
-    display: flex;
-    justify-content: center; /* <-- centra horizontalmente */
-    gap: 1rem;               /* separación entre botones */
-    margin-top: 1rem;
-  }
-  
-  /* Botón "Aceptar" (rojo) */
-  .delete-content .delete-confirm-button {
-    background-color: #dc3545; 
-    color: #fff;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  /* Hover en botón "Aceptar" */
-  .delete-content .delete-confirm-button:hover {
-    background-color: #c53041; /* un rojo más oscuro */
-  }
-  
-  /* Botón "Cancelar" (gris) */
-  .delete-content .delete-cancel-button {
-    background-color: #6c757d;
-    color: #fff;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  /* Hover en botón "Cancelar" */
-  .delete-content .delete-cancel-button:hover {
-    background-color: #5a6268; /* un gris más oscuro */
-  }
-  
   .spinner {
     border: 2px solid #ccc;
     border-top: 2px solid #007bff;
@@ -357,30 +274,6 @@
       font-size: 0.9rem;
     }
   }
-
-.close-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background-color: rgba(128, 128, 128, 0.5);
-  border: none;
-  color: white;
-  font-size: 20px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 10;
-  transition: background-color 0.2s;
-}
-
-.close-button:hover {
-  background-color: rgba(128, 128, 128, 0.8);
-}
 
 .modal-content {
   position: relative;
