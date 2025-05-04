@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { getSession } from 'next-auth/react';
+import { getServerSession } from 'next-auth/react';
 import formidable from 'formidable';
 
 // Configurar para que Next.js no analice el cuerpo de la solicitud como JSON
@@ -17,7 +17,7 @@ cloudinary.config({
 });
 
 export default async function handler(req, res) {
-  const session = await getSession({ req });
+  const session = await getServerSession({ req });
   if (!session) {
     return res.status(401).json({ error: 'No autorizado' });
   }
