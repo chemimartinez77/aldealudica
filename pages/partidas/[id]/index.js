@@ -71,7 +71,17 @@ export default function PartidaPage() {
                         method: 'POST',
                         body: formData,
                         credentials: 'include',
+                        headers: {
+                            "X-CSRF-Token": document.cookie
+                                .split("; ")
+                                .find((row) => row.startsWith("__Host-next-auth.csrf-token"))
+                                ?.split("=")[1] || "",
+                        },
                     });
+                    if (!res.ok) {
+                        const errorData = await res.json();
+                        throw new Error(errorData.error || "Error al subir la imagen");
+                    }
                     return await res.json();
                 })
             );
@@ -86,7 +96,13 @@ export default function PartidaPage() {
                 // POST a /api/partidas/[id]/images para guardarlas en la partida
                 const updateRes = await fetch(`/api/partidas/${id}/images`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-Token": document.cookie
+                            .split("; ")
+                            .find((row) => row.startsWith("__Host-next-auth.csrf-token"))
+                            ?.split("=")[1] || "",
+                    },
                     credentials: 'include',
                     body: JSON.stringify({ images: newImages }),
                 });
