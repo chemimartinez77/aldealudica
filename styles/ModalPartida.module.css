@@ -1,3 +1,5 @@
+/* -- ModalPartida.module.css actualizado para scroll interno y evitar scroll de fondo -- */
+
 /* Overlay de la modal */
 .modal-overlay {
     position: fixed;
@@ -13,6 +15,7 @@
     padding: 1rem;
     box-sizing: border-box;
     animation: fade-in 0.3s ease-out;
+    overscroll-behavior: none;      /* Evita el scroll del fondo */
 }
 
 /* Contenido de la modal */
@@ -29,6 +32,7 @@
     animation: slide-up 0.3s ease-out;
     -webkit-overflow-scrolling: touch;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    overscroll-behavior: contain;   /* Contiene el scroll dentro de la modal */
 }
 
 /* Animaciones */
@@ -60,7 +64,6 @@
     position: sticky;
     top: 0;
     z-index: 2;
-    margin-bottom: 10px;
 }
 
 .modal-header h2 {
