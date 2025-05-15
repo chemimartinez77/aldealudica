@@ -699,7 +699,7 @@ export default function ModalPartida({
                                 )
                             )}
 
-                        {/* Botón "Cerrar" si view/join, "Cancelar" si create/edit */}
+                        {/* Botón "Cerrar" si view/join, "Cancelar" si create/edit
                         {mode === "view" || mode === "join" ? (
                             <Button onClick={onClose} colorScheme="gray" variant="outline">
                                 Cerrar
@@ -708,7 +708,7 @@ export default function ModalPartida({
                             <Button onClick={onClose} colorScheme="gray" variant="solid">
                                 Cancelar
                             </Button>
-                        )}
+                        )} */}
 
                         {/* Botón "Guardar" => create/edit */}
                         {(mode === "create" || mode === "edit") && (
