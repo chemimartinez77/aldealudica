@@ -626,15 +626,7 @@ export default function ModalPartida({
                             <button
                                 type="button"
                                 onClick={handleJoinPartida}
-                                style={{
-                                    backgroundColor: "#28a745",
-                                    color: "#fff",
-                                    border: "none",
-                                    padding: "8px 12px",
-                                    marginRight: "8px",
-                                    borderRadius: "4px",
-                                    cursor: "pointer",
-                                }}
+                                className={styles["join-button"]}
                             >
                                 ¡Apúntame a la partida!
                             </button>
@@ -768,7 +760,7 @@ export default function ModalPartida({
             {/* Botón para ir a la página de detalles */}
             <button
                 onClick={handleGoToDetails}
-                className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
+                className={styles["details-button"]}
             >
                 Ver Detalles de la Partida
             </button>
