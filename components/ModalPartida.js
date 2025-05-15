@@ -1,4 +1,15 @@
 // components/ModalPartida.js
+import {
+    AlertDialog,
+    AlertDialogBody,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogContent,
+    AlertDialogOverlay,
+    useDisclosure
+} from "@chakra-ui/react";
+import { useRef } from "react";
+
 import { useState, useEffect } from "react";
 import { FaTrash, FaSearch } from "react-icons/fa";
 import locations from "../data/locations.json"; // ["Aldea Lúdica"]
@@ -6,6 +17,12 @@ import styles from "../styles/ModalPartida.module.css";
 import SearchResultsModal from "./SearchResultsModal";
 import ImagePreviewModal from "./ImagePreviewModal";
 import { useRouter } from 'next/router'; // Importar useRouter
+import { toast } from "react-toastify";
+import { Button, HStack } from "@chakra-ui/react";
+import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
+import { IconButton } from "@chakra-ui/react";
+import { CloseIcon } from "@chakra-ui/icons";
+
 
 export default function ModalPartida({
     mode, // "create", "edit", "view", "join"
@@ -19,7 +36,7 @@ export default function ModalPartida({
     isAdmin, // <- Añadido
 }) {
     const router = useRouter(); // Usar useRouter para la navegación
-        // Define the handleGoToDetails function
+    // Define the handleGoToDetails function
     const handleGoToDetails = () => {
         if (partida && partida.id) {
             router.push(`/partidas/${partida.id}`); // Redirigir a la página de detalles
@@ -50,12 +67,15 @@ export default function ModalPartida({
     // Lista de participantes
     const [participants, setParticipants] = useState([]);
 
-    // Popover para confirmar apuntarse
-    const [showJoinPopover, setShowJoinPopover] = useState(false);
-    const [joinMessage, setJoinMessage] = useState("");
-
     // Popover para confirmar borrar partida
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const {
+        isOpen: isAlertOpen,
+        onOpen: openAlert,
+        onClose: closeAlert
+    } = useDisclosure();
+
+    const cancelRef = useRef();
+    const modalRef = useRef(); // <- Añadido para referenciar el contenedor modal
 
     useEffect(() => {
         if (!partida) {
@@ -79,6 +99,7 @@ export default function ModalPartida({
         setDescription(partida.description || "");
         setPlayerLimit(partida.playerLimit || 4);
         setCreatorParticipates(partida.creatorParticipates ?? true);
+
         setLocation(partida.location || "Aldea Lúdica");
 
         // Hora de inicio
@@ -229,6 +250,8 @@ export default function ModalPartida({
     async function handleJoinPartida() {
         if (!isLoggedIn) return;
 
+        const action = isParticipant ? "leave" : "join";
+
         try {
             const res = await fetch("/api/partidas/join", {
                 method: "POST",
@@ -242,24 +265,19 @@ export default function ModalPartida({
             const data = await res.json();
 
             if (data.error) {
-                // Si hay error, lo mostramos en el popover
-                setJoinMessage("Error al apuntarse: " + data.error);
+                toast.error(`❌ Error al ${action === "join" ? "apuntarte" : "salirte"}: ${data.error}`);
             } else {
-                // 1) Se actualizan los participantes inmediatamente
                 setParticipants(data.partida.participants || []);
-
-                // 2) Se muestra el mensaje en el popover
-                setJoinMessage(
-                    `Acabas de apuntarte a "${partida.title}" el día ${partida.date} a las ${partida.startTime}.`
+                toast.success(
+                    action === "join"
+                        ? `✅ Te has apuntado a "${partida.title}" el día ${partida.date} a las ${partida.startTime}.`
+                        : `👋 Has salido de la partida "${partida.title}".`
                 );
             }
 
-            // Abre el popover
-            setShowJoinPopover(true);
         } catch (err) {
             console.error(err);
-            setJoinMessage("Error interno al apuntarse.");
-            setShowJoinPopover(true);
+            toast.error("❌ Error interno al gestionar la participación.");
         }
     }
 
@@ -289,6 +307,38 @@ export default function ModalPartida({
             return;
         }
 
+        // Copia de participantes
+        let updatedParticipants = [...participants];
+
+        // Buscar si el usuario actual ya está en la lista
+        const currentIndex = updatedParticipants.findIndex((p) => {
+            const id = p._id?.toString?.() ?? p?.toString?.();
+            return id === currentUserId;
+        });
+
+        const isAlreadyIn = currentIndex !== -1;
+
+        // Si el checkbox está marcado y el usuario no está, lo añadimos
+        if ((isCreator || isAdmin) && creatorParticipates && !isAlreadyIn) {
+            updatedParticipants.push(currentUserId);
+        }
+
+        // Si el checkbox está desmarcado y el usuario está, lo eliminamos
+        if ((isCreator || isAdmin) && !creatorParticipates && isAlreadyIn) {
+            updatedParticipants.splice(currentIndex, 1);
+        }
+
+        // Limpieza adicional: si el creador ha desmarcado el check, asegúrate de que no quede en la lista
+        const creatorId = partida?.creatorId?.toString?.() ?? currentUserId?.toString?.();
+        const cleanParticipants = updatedParticipants.filter((p) => {
+            const id = p._id?.toString?.() ?? p?.toString?.();
+            if (!creatorParticipates && id === creatorId) {
+                return false;
+            }
+            return true;
+        });
+
+
         const newPartida = {
             id: partida?.id,
             title,
@@ -296,33 +346,27 @@ export default function ModalPartida({
             gameDetails: selectedGameDetails || null,
             description,
             date: formatDate(date || new Date(partida?.date)),
-            startTime: `${startHour.padStart(2, "0")}:${startMinute.padStart(
-                2,
-                "0"
-            )}`,
-            endTime: `${endHour.padStart(2, "0")}:${endMinute.padStart(
-                2,
-                "0"
-            )}`,
+            startTime: `${startHour.padStart(2, "0")}:${startMinute.padStart(2, "0")}`,
+            endTime: `${endHour.padStart(2, "0")}:${endMinute.padStart(2, "0")}`,
             playerLimit: pl,
             creatorParticipates,
             location,
             creatorId: currentUserId,
-            participants,
+            participants: cleanParticipants,
         };
+
         onSave(newPartida);
     }
 
     function handleDeleteClick() {
-        if (!partida?.id) return;
-        setShowDeleteConfirm(true);
+        openAlert(); // Chakra se encarga de abrir el diálogo
     }
 
     // 3) Función que se llama al pulsar “Aceptar”
     function handleConfirmDelete() {
         if (!partida?.id) return;
-        onDelete(partida.id); // Llama a tu prop onDelete para eliminar
-        setShowDeleteConfirm(false);
+        onDelete(partida.id);
+        closeAlert(); // <-- ¡Este es el importante!
     }
 
     function formatDate(d) {
@@ -371,15 +415,22 @@ export default function ModalPartida({
 
     return (
         <div className={styles["modal-overlay"]}>
-            <div className={styles["modal-content"]}>
+            <div ref={modalRef} className={styles["modal-content"]}>
                 {/* Botón de cierre (aspa) */}
-                <button 
-                    className={styles["close-button"]} 
-                    onClick={onClose}
+                <IconButton
+                    icon={<CloseIcon />}
                     aria-label="Cerrar"
-                >
-                    &times;
-                </button>
+                    onClick={onClose}
+                    size="sm"
+                    position="absolute"
+                    top="10px"
+                    right="10px"
+                    borderRadius="full"
+                    bg="gray.500"
+                    color="white"
+                    _hover={{ bg: "gray.700" }}
+                    zIndex={10}
+                />
 
                 {/* Encabezado: puedes eliminar o modificar según prefieras */}
                 {/* Encabezado con franja azul */}
@@ -579,21 +630,26 @@ export default function ModalPartida({
 
                         <div className={styles["form-group"]}>
                             <label>&nbsp;</label>
-                            <div>
-                                <input
-                                    type="checkbox"
-                                    id="creatorParticipates"
-                                    checked={creatorParticipates}
-                                    onChange={(e) =>
-                                        setCreatorParticipates(e.target.checked)
-                                    }
-                                    disabled={isFull}
-                                />
-                                <label htmlFor="creatorParticipates">
-                                    Participaré en la partida
-                                </label>
-                            </div>
+                            {isCreator && (
+                                <div className={styles["form-group"]}>
+                                    <label>&nbsp;</label>
+                                    <div>
+                                        <input
+                                            type="checkbox"
+                                            id="creatorParticipates"
+                                            checked={creatorParticipates}
+                                            onChange={(e) => setCreatorParticipates(e.target.checked)}
+                                            disabled={isFull}
+                                        />
+                                        <label htmlFor="creatorParticipates">
+                                            Participaré en la partida
+                                        </label>
+                                    </div>
+                                </div>
+                            )}
+
                         </div>
+
 
                         <div className={styles["form-group"]}>
                             <label>Dónde será la partida</label>
@@ -617,56 +673,57 @@ export default function ModalPartida({
 
                 {/* BOTONES */}
                 <div className={styles["modal-actions"]}>
-                    {/* Botón verde para unirse => SOLO modo "join" */}
-                    {mode === "join" &&
+                    {/* Botón verde para unirse o cancelar inscripción */}
+                    {(mode === "join" || (mode === "edit" && isAdmin && !isCreator)) &&
                         isLoggedIn &&
-                        !isCreator &&
-                        !isParticipant &&
                         !isFull && (
-                            <button
-                                type="button"
-                                onClick={handleJoinPartida}
-                                className={styles["join-button"]}
-                            >
-                                ¡Apúntame a la partida!
-                            </button>
+                            isParticipant ? (
+                                <Button
+                                    colorScheme="red"
+                                    onClick={handleJoinPartida}
+                                    rightIcon={<FaThumbsDown />}
+                                    mr={2}
+                                >
+                                    Ya no quiero jugar
+                                </Button>
+                            ) : (
+                                <Button
+                                    colorScheme="green"
+                                    onClick={handleJoinPartida}
+                                    rightIcon={<FaThumbsUp />}
+                                    mr={2}
+                                >
+                                    ¡Quiero jugar!
+                                </Button>
+                            )
                         )}
 
                     {/* Botón "Cerrar" si view/join, "Cancelar" si create/edit */}
                     {mode === "view" || mode === "join" ? (
-                        <button
-                            type="button"
-                            className={styles["cancel-button"]}
-                            onClick={onClose}
-                        >
+                        <Button onClick={onClose} colorScheme="gray" variant="outline">
                             Cerrar
-                        </button>
+                        </Button>
                     ) : (
-                        <button
-                            type="button"
-                            className={styles["cancel-button"]}
-                            onClick={onClose}
-                        >
+                        <Button onClick={onClose} colorScheme="gray" variant="solid">
                             Cancelar
-                        </button>
+                        </Button>
                     )}
 
                     {/* Botón "Guardar" => create/edit */}
                     {(mode === "create" || mode === "edit") && (
-                        <button type="button" onClick={handleSaveClick}>
+                        <Button onClick={handleSaveClick} colorScheme="blue">
                             Guardar
-                        </button>
+                        </Button>
                     )}
 
-                    {/* Botón eliminar => solo edit + eres el creador */}
+                    {/* Botón eliminar => solo edit + eres el creador o admin */}
                     {mode === "edit" && (isCreator || isAdmin) && (
-                        <button
-                            type="button"
+                        <IconButton
+                            aria-label="Eliminar partida"
+                            icon={<FaTrash />}
                             onClick={handleDeleteClick}
-                            className={styles["delete-button"]}
-                        >
-                            <FaTrash />
-                        </button>
+                            colorScheme="red"
+                        />
                     )}
                 </div>
 
@@ -685,45 +742,6 @@ export default function ModalPartida({
                         image={selectedGameDetails.image}
                         onClose={() => setShowImagePreview(false)}
                     />
-                )}
-
-                {/* Popover tras unirse */}
-                {showJoinPopover && (
-                    <div className={styles["popover-overlay"]}>
-                        <div className={styles["popover-content"]}>
-                            <p>{joinMessage}</p>
-                            <button
-                                className={styles["cancel-button"]} // <--- Usa la clase que quieras
-                                onClick={() => setShowJoinPopover(false)}
-                            >
-                                Cerrar
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {showDeleteConfirm && (
-                    <div className={styles["delete-overlay"]}>
-                        <div className={styles["delete-content"]}>
-                            <p>
-                                ¿Estás seguro de que deseas eliminar la partida?
-                            </p>
-                            <div className={styles["delete-buttons"]}>
-                                <button
-                                    className={styles["delete-confirm-button"]}
-                                    onClick={handleConfirmDelete}
-                                >
-                                    Aceptar
-                                </button>
-                                <button
-                                    className={styles["delete-cancel-button"]}
-                                    onClick={() => setShowDeleteConfirm(false)}
-                                >
-                                    Cancelar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 )}
 
                 {isSearching && (
@@ -757,14 +775,47 @@ export default function ModalPartida({
                         </div>
                     </div>
                 )}
-            {/* Botón para ir a la página de detalles */}
-            <button
-                onClick={handleGoToDetails}
-                className={styles["details-button"]}
-            >
-                Ver Detalles de la Partida
-            </button>
+                {/* Botón para ir a la página de detalles */}
+                <Button
+                    onClick={handleGoToDetails}
+                    colorScheme="blue"
+                    mt={4}
+                >
+                    Ver Detalles de la Partida
+                </Button>
             </div>
+            {isAlertOpen && (
+                <AlertDialog
+                    isOpen={isAlertOpen}
+                    leastDestructiveRef={cancelRef}
+                    onClose={closeAlert}
+                    isCentered
+                    portalProps={{ containerRef: modalRef }} // <-- Aquí le decimos que no use body
+                >
+                    <AlertDialogOverlay>
+                        <AlertDialogContent>
+                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                                Eliminar partida
+                            </AlertDialogHeader>
+
+                            <AlertDialogBody>
+                                ¿Estás seguro de que deseas eliminar la partida?
+                            </AlertDialogBody>
+
+                            <AlertDialogFooter>
+                                <Button ref={cancelRef} onClick={closeAlert}>
+                                    Cancelar
+                                </Button>
+                                <Button colorScheme="red" onClick={handleConfirmDelete} ml={3}>
+                                    Aceptar
+                                </Button>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialogOverlay>
+                </AlertDialog>
+            )}
+
+
         </div>
     );
 }
