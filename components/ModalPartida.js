@@ -671,62 +671,70 @@ export default function ModalPartida({
 
                     {/* Modo solo lectura (view/join) */}
                     {isReadOnlyMode && renderReadOnlyInfo()}
-                </div>
 
-                {/* BOTONES */}
-                <div className={styles["modal-actions"]}>
-                    {/* Botón verde para unirse o cancelar inscripción */}
-                    {(mode === "join" || (mode === "edit" && isAdmin && !isCreator)) &&
-                        isLoggedIn &&
-                        !isFull && (
-                            isParticipant ? (
-                                <Button
-                                    colorScheme="red"
-                                    onClick={handleJoinPartida}
-                                    rightIcon={<FaThumbsDown />}
-                                    mr={2}
-                                >
-                                    Ya no quiero jugar
-                                </Button>
-                            ) : (
-                                <Button
-                                    colorScheme="green"
-                                    onClick={handleJoinPartida}
-                                    rightIcon={<FaThumbsUp />}
-                                    mr={2}
-                                >
-                                    ¡Quiero jugar!
-                                </Button>
-                            )
+                    {/* BOTONES */}
+                    <div className={styles["modal-actions"]}>
+                        {/* Botón verde para unirse o cancelar inscripción */}
+                        {(mode === "join" || (mode === "edit" && isAdmin && !isCreator)) &&
+                            isLoggedIn &&
+                            !isFull && (
+                                isParticipant ? (
+                                    <Button
+                                        colorScheme="red"
+                                        onClick={handleJoinPartida}
+                                        rightIcon={<FaThumbsDown />}
+                                        mr={2}
+                                    >
+                                        Ya no quiero jugar
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        colorScheme="green"
+                                        onClick={handleJoinPartida}
+                                        rightIcon={<FaThumbsUp />}
+                                        mr={2}
+                                    >
+                                        ¡Quiero jugar!
+                                    </Button>
+                                )
+                            )}
+
+                        {/* Botón "Cerrar" si view/join, "Cancelar" si create/edit */}
+                        {mode === "view" || mode === "join" ? (
+                            <Button onClick={onClose} colorScheme="gray" variant="outline">
+                                Cerrar
+                            </Button>
+                        ) : (
+                            <Button onClick={onClose} colorScheme="gray" variant="solid">
+                                Cancelar
+                            </Button>
                         )}
 
-                    {/* Botón "Cerrar" si view/join, "Cancelar" si create/edit */}
-                    {mode === "view" || mode === "join" ? (
-                        <Button onClick={onClose} colorScheme="gray" variant="outline">
-                            Cerrar
-                        </Button>
-                    ) : (
-                        <Button onClick={onClose} colorScheme="gray" variant="solid">
-                            Cancelar
-                        </Button>
-                    )}
+                        {/* Botón "Guardar" => create/edit */}
+                        {(mode === "create" || mode === "edit") && (
+                            <Button onClick={handleSaveClick} colorScheme="blue">
+                                Guardar
+                            </Button>
+                        )}
 
-                    {/* Botón "Guardar" => create/edit */}
-                    {(mode === "create" || mode === "edit") && (
-                        <Button onClick={handleSaveClick} colorScheme="blue">
-                            Guardar
+                        {/* Botón eliminar => solo edit + eres el creador o admin */}
+                        {mode === "edit" && (isCreator || isAdmin) && (
+                            <IconButton
+                                aria-label="Eliminar partida"
+                                icon={<FaTrash />}
+                                onClick={handleDeleteClick}
+                                colorScheme="red"
+                            />
+                        )}
+                        {/* Botón para ir a la página de detalles */}
+                        <Button
+                            onClick={handleGoToDetails}
+                            colorScheme="blue"
+                            mt={4}
+                        >
+                            Ver Detalles de la Partida
                         </Button>
-                    )}
-
-                    {/* Botón eliminar => solo edit + eres el creador o admin */}
-                    {mode === "edit" && (isCreator || isAdmin) && (
-                        <IconButton
-                            aria-label="Eliminar partida"
-                            icon={<FaTrash />}
-                            onClick={handleDeleteClick}
-                            colorScheme="red"
-                        />
-                    )}
+                    </div>
                 </div>
 
                 {/* Modal con resultados de búsqueda */}
@@ -777,14 +785,7 @@ export default function ModalPartida({
                         </div>
                     </div>
                 )}
-                {/* Botón para ir a la página de detalles */}
-                <Button
-                    onClick={handleGoToDetails}
-                    colorScheme="blue"
-                    mt={4}
-                >
-                    Ver Detalles de la Partida
-                </Button>
+
             </div>
             {isAlertOpen && (
                 <AlertDialog
