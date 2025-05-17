@@ -167,11 +167,14 @@ export default function PartidaPage() {
     const handleSave = async () => {
         try {
             const dataToSend = {
-                realDuration: { hours, minutes },
-                scores: scores.map(score => ({
+                realDuration: {
+                    hours: parseInt(hours) || 0,
+                    minutes: parseInt(minutes) || 0,
+                  },
+                  scores: scores.map(score => ({
                     player: score.player,
                     score: parseInt(score.score) || 0
-                })),
+                  })),
                 winner:
                     scores.length > 0
                         ? scores.reduce((prev, current) =>
@@ -326,7 +329,7 @@ export default function PartidaPage() {
                                 <input
                                     type="number"
                                     value={hours}
-                                    onChange={(e) => setHours(parseInt(e.target.value) || 0)}
+                                    onChange={(e) => setHours(e.target.value)}
                                     className={`
                                         ${styles.input}
                                         ${styles.numberInput}
@@ -341,7 +344,7 @@ export default function PartidaPage() {
                                 <input
                                     type="number"
                                     value={minutes}
-                                    onChange={(e) => setMinutes(parseInt(e.target.value) || 0)}
+                                    onChange={(e) => setMinutes(e.target.value)}
                                     className={`
                                         ${styles.input}
                                         ${styles.numberInput}
@@ -378,11 +381,11 @@ export default function PartidaPage() {
                                             (s) => s.player === participant._id
                                         );
                                         if (index >= 0) {
-                                            newScores[index].score = parseInt(e.target.value) || 0;
+                                            newScores[index].score = e.target.value;
                                         } else {
                                             newScores.push({
                                                 player: participant._id,
-                                                score: parseInt(e.target.value) || 0,
+                                                score: e.target.value,
                                             });
                                         }
                                         setScores(newScores);
