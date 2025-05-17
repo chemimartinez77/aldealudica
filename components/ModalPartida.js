@@ -77,6 +77,14 @@ export default function ModalPartida({
     const cancelRef = useRef();
     const modalRef = useRef(); // <- Añadido para referenciar el contenedor modal
 
+    // Bloquea el scroll del body mientras la modal está montada
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, []);
+
     useEffect(() => {
         if (!partida) {
             // Reset en modo create
