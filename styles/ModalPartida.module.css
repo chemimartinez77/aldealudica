@@ -399,8 +399,10 @@
 
 @media (max-width: 400px) {
     .modal-overlay {
-        padding: 0.5rem;
-    }
+        align-items: flex-start;   /* En vez de center */
+        padding-top: 1rem;         /* O el margen que prefieras arriba */
+        padding-bottom: 0;
+      }
     
     .modal-content {
         max-width: 100%;
