@@ -1,5 +1,5 @@
 import dbConnect from '../../../../lib/dbConnect';
-import Partida from '../../../../models/partida';
+import Partida from '../../../../models/Partida';
 
 export default async function handler(req, res) {
   await dbConnect();
