@@ -262,15 +262,6 @@ export default function PartidaPage() {
                             </div>
                         </div>
                     </div>
-                    {/* <div className={styles.cardHeader}>
-                        <h1 className={styles.cardTitle}>{partida.title}</h1>
-                        <button
-                            onClick={handleSave}
-                            className={`${styles.button} ${styles.headerSaveButton}`}
-                        >
-                            Guardar resultados
-                        </button>
-                    </div> */}
 
                     {/* Info general */}
                     <div className={styles.cardBody}>
