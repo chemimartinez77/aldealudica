@@ -47,20 +47,6 @@
     margin: 0;
 }
 
-.sectionTitle {
-    font-size: 1rem;
-    /* Reducido aún más */
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #0a2463;
-}
-
-/* Ajustar el espaciado interno de las tarjetas */
-.cardBody {
-    padding: 0.75rem;
-    /* Reducido aún más */
-}
-
 /* Ajustar el tamaño de la primera tarjeta */
 .card:first-child .cardHeader {
     padding: 0.6rem 1rem;
@@ -70,23 +56,6 @@
 .card:first-child .cardTitle {
     font-size: 1.2rem;
     /* Ligeramente más grande que las demás pero aún reducido */
-}
-
-/* Reducir el espacio entre las tarjetas */
-.card {
-    margin-bottom: 1rem;
-    /* Reducido de 1.5rem o similar */
-}
-
-/* Ajustar el espaciado de los elementos de detalle */
-.detailItem {
-    margin-bottom: 0.5rem;
-    /* Reducido */
-}
-
-.detailLabel {
-    font-size: 0.9rem;
-    /* Reducido */
 }
 
 .cardBody {
@@ -113,13 +82,12 @@
 }
 
 .detailItem {
-    margin-bottom: 12px;
-}
-
-.detailLabel {
-    font-weight: 500;
-    color: #4b5563;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 1rem;
 }
 
 .imageContainer {
@@ -451,19 +419,12 @@
     vertical-align: middle;
 }
 
-.detailItem {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-    font-size: 1rem;
-}
-
 .detailLabel {
+    font-size: 0.9rem;
     font-weight: 500;
     color: #4b5563;
     margin-right: 4px;
-    /* ¡No hace falta display: block! */
+    margin-bottom: 0;
 }
 
 .detailValue {
