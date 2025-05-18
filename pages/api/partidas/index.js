@@ -1,6 +1,6 @@
 // pages/api/partidas/index.js
 import dbConnect from "../../../lib/dbConnect";
-import Partida from "../../../models/Partida";
+import Partida from "../../../models/partida";
 import mongoose from "mongoose";
 import webpush from "web-push";
 import Subscription from "../../../models/Subscription";

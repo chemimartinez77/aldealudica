@@ -438,45 +438,44 @@
     font-size: 0.98em;
 }
 
-.chipList {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;                /* Más compacto */
-    margin-top: 0;
-    margin-left: 8px;        /* Un poco de margen respecto al ":" */
-    align-items: center;
-}
-
 .chip {
     display: inline-block;
     background: linear-gradient(90deg, #91eac9 0%, #69a6f9 100%);
     color: #16356c;
     border-radius: 12px;
-    padding: 1.5px 8px;
-    /* Menos padding */
-    font-size: 0.85em;
-    /* Más pequeño */
-    font-weight: 500;
+    padding: 2px 10px;
+    font-size: 0.85em;    /* Más pequeño */
+    font-weight: 600;
     box-shadow: 0 2px 6px rgba(100, 100, 150, 0.07);
     border: 1px solid #b1d9fd;
     margin-right: 0;
-    margin-bottom: 1px;
+    margin-bottom: 2px;
     transition: background 0.2s;
-    line-height: 1.1;
+}
+
+.chipList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 0;
+    margin-left: 6px;
 }
 
 .heroBanner {
     position: relative;
     width: 100%;
-    min-height: 220px;
-    border-radius: 8px 8px 0 0;
+    min-height: 340px;    /* Antes 180px. Puedes probar 320-400px */
+    max-height: 420px;    /* Opcional: no se haga gigante */
+    border-radius: 18px 18px 0 0;
     overflow: hidden;
     margin-bottom: 10px;
-    background: #e7c6ff; /* fallback si no hay imagen */
-    display: flex;
-    align-items: flex-end;
+    background: #bbb;
     background-size: cover;
     background-position: center;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    box-shadow: 0 8px 24px rgba(50,50,90,0.13);
 }
 
 .heroOverlay {
@@ -484,18 +483,23 @@
     left: 0;
     bottom: 0;
     width: 100%;
-    padding: 24px 32px 18px 24px;
-    background: linear-gradient(0deg, rgba(10, 36, 99, 0.88) 90%, rgba(10, 36, 99, 0) 100%);
+    padding: 32px 36px 18px 32px;
+    background: linear-gradient(
+        0deg,
+        rgba(10, 36, 99, 0.72) 75%,
+        rgba(10, 36, 99, 0.08) 100%
+    );
     color: #fff;
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 0 18px 18px;
+    box-shadow: 0 2px 10px 0px #0004;
 }
 
-.heroTitle {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin: 0 0 8px 0;
-    letter-spacing: 0.5px;
-    text-shadow: 0 2px 8px rgba(20,20,20,0.45); /* Sombra para leer siempre */
+
+.heroTitle,
+.heroBanner .detailLabel,
+.heroBanner .detailValue {
+    color: #fff !important;
+    text-shadow: 0 2px 10px #000a, 0 0px 2px #111b;
 }
 
 .heroSaveButton {
@@ -515,3 +519,21 @@
 .heroSaveButton:hover {
     background: #174eb7;
 }
+
+@media (max-width: 600px) {
+    .heroBanner {
+      min-height: 180px;
+      padding: 0;
+    }
+    .heroOverlay {
+      padding: 18px 10px 10px 10px;
+      border-radius: 0 0 10px 10px;
+    }
+    .heroSaveButton {
+      margin-left: 0;
+      width: 100%;
+      padding: 10px 0;
+      font-size: 1rem;
+    }
+  }
+  

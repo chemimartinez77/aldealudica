@@ -1,6 +1,6 @@
 import { getToken } from 'next-auth/jwt';
 import dbConnect from '../../../../lib/dbConnect';
-import Partida from '../../../../models/Partida';
+import Partida from '../../../../models/partida';
 import { v2 as cloudinary } from 'cloudinary';
 
 // Configurar Cloudinary
