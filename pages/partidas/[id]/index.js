@@ -7,7 +7,7 @@ import { Eye, Trash2 } from 'lucide-react'; // <-- Importamos iconos
 import styles from '../../../styles/PartidaDetails.module.css';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import Layout from '../../../components/Layout'; // Importamos el componente Layout
-import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUsers, FaUserFriends, FaDice } from "react-icons/fa";
+import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUsers, FaUser, FaDice } from "react-icons/fa";
 
 export default function PartidaPage() {
     const router = useRouter();
@@ -245,23 +245,24 @@ export default function PartidaPage() {
             <div className={styles.container}>
                 <div className={styles.card}>
                     {/* HERO BANNER */}
-                    <div className={styles.heroBanner}>
-                        {partida.gameDetails?.image ? (
-                            <img
-                                src={partida.gameDetails.image}
-                                alt={partida.title}
-                                className={styles.heroImage}
-                            />
-                        ) : (
-                            <div className={styles.heroImagePlaceholder}>
-                                <FaDice className={styles.heroIcon} />
-                            </div>
-                        )}
+                    <div className={styles.heroBanner} style={{
+                        backgroundImage: partida.gameDetails?.image ? `url('${partida.gameDetails.image}')` : undefined,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                    }}>
                         <div className={styles.heroOverlay}>
-                            <h1 className={styles.heroTitle}>{partida.title}</h1>
+                            <div className={styles.heroContent}>
+                                <h1 className={styles.heroTitle}>{partida.title}</h1>
+                                <button
+                                    onClick={handleSave}
+                                    className={styles.heroSaveButton}
+                                >
+                                    Guardar resultados
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div className={styles.cardHeader}>
+                    {/* <div className={styles.cardHeader}>
                         <h1 className={styles.cardTitle}>{partida.title}</h1>
                         <button
                             onClick={handleSave}
@@ -269,7 +270,7 @@ export default function PartidaPage() {
                         >
                             Guardar resultados
                         </button>
-                    </div>
+                    </div> */}
 
                     {/* Info general */}
                     <div className={styles.cardBody}>
@@ -295,22 +296,19 @@ export default function PartidaPage() {
                                     <span className={styles.detailValue}>{partida.location}</span>
                                 </div>
                                 <div className={styles.detailItem}>
-                                    <FaUsers className={styles.icon} />
+                                    <FaUser className={styles.icon} />
                                     <span className={styles.detailLabel}>Límite de jugadores:</span>
                                     <span className={styles.detailValue}>{partida.playerLimit}</span>
                                 </div>
-                                <div className={styles.detailItem} style={{ alignItems: "flex-start" }}>
-                                    <FaUserFriends className={styles.icon} />
+                                <div className={styles.detailItem}>
+                                    <FaUsers className={styles.icon} />
                                     <span className={styles.detailLabel}>Participantes:</span>
-                                    <span className={styles.detailValue}>
-                                        {partida.participants.length} / {partida.playerLimit}
-                                        <div className={styles.chipList}>
-                                            {partida.participants.map((participant) => (
-                                                <span key={participant._id} className={styles.chip}>
-                                                    {participant.name}
-                                                </span>
-                                            ))}
-                                        </div>
+                                    <span className={styles.chipList}>
+                                        {partida.participants.map((participant) => (
+                                            <span key={participant._id} className={styles.chip}>
+                                                {participant.name}
+                                            </span>
+                                        ))}
                                     </span>
                                 </div>
                             </div>
