@@ -7,6 +7,7 @@ import { Eye, Trash2 } from 'lucide-react'; // <-- Importamos iconos
 import styles from '../../../styles/PartidaDetails.module.css';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import Layout from '../../../components/Layout'; // Importamos el componente Layout
+import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUsers, FaUserFriends, FaDice } from "react-icons/fa";
 
 export default function PartidaPage() {
     const router = useRouter();
@@ -170,11 +171,11 @@ export default function PartidaPage() {
                 realDuration: {
                     hours: parseInt(hours) || 0,
                     minutes: parseInt(minutes) || 0,
-                  },
-                  scores: scores.map(score => ({
+                },
+                scores: scores.map(score => ({
                     player: score.player,
                     score: parseInt(score.score) || 0
-                  })),
+                })),
                 winner:
                     scores.length > 0
                         ? scores.reduce((prev, current) =>
@@ -243,6 +244,23 @@ export default function PartidaPage() {
             )}
             <div className={styles.container}>
                 <div className={styles.card}>
+                    {/* HERO BANNER */}
+                    <div className={styles.heroBanner}>
+                        {partida.gameDetails?.image ? (
+                            <img
+                                src={partida.gameDetails.image}
+                                alt={partida.title}
+                                className={styles.heroImage}
+                            />
+                        ) : (
+                            <div className={styles.heroImagePlaceholder}>
+                                <FaDice className={styles.heroIcon} />
+                            </div>
+                        )}
+                        <div className={styles.heroOverlay}>
+                            <h1 className={styles.heroTitle}>{partida.title}</h1>
+                        </div>
+                    </div>
                     <div className={styles.cardHeader}>
                         <h1 className={styles.cardTitle}>{partida.title}</h1>
                         <button
@@ -258,34 +276,42 @@ export default function PartidaPage() {
                         <div className={styles.detailsGrid}>
                             <div>
                                 <h2 className={styles.sectionTitle}>Detalles de la partida</h2>
+
                                 <div className={styles.detailItem}>
-                                    <p className={styles.detailLabel}>Fecha:</p>
-                                    <p>{formatDate(partida.date)}</p>
+                                    <FaCalendarAlt className={styles.icon} />
+                                    <span className={styles.detailLabel}>Fecha:</span>
+                                    <span className={styles.detailValue}>{formatDate(partida.date)}</span>
                                 </div>
                                 <div className={styles.detailItem}>
-                                    <p className={styles.detailLabel}>Horario:</p>
-                                    <p>
+                                    <FaClock className={styles.icon} />
+                                    <span className={styles.detailLabel}>Horario:</span>
+                                    <span className={styles.detailValue}>
                                         {partida.startTime} - {partida.endTime}
-                                    </p>
+                                    </span>
                                 </div>
                                 <div className={styles.detailItem}>
-                                    <p className={styles.detailLabel}>Ubicación:</p>
-                                    <p>{partida.location}</p>
+                                    <FaMapMarkerAlt className={styles.icon} />
+                                    <span className={styles.detailLabel}>Ubicación:</span>
+                                    <span className={styles.detailValue}>{partida.location}</span>
                                 </div>
                                 <div className={styles.detailItem}>
-                                    <p className={styles.detailLabel}>Límite de jugadores:</p>
-                                    <p>{partida.playerLimit}</p>
+                                    <FaUsers className={styles.icon} />
+                                    <span className={styles.detailLabel}>Límite de jugadores:</span>
+                                    <span className={styles.detailValue}>{partida.playerLimit}</span>
                                 </div>
-                                <div className={styles.detailItem}>
-                                    <p className={styles.detailLabel}>Participantes:</p>
-                                    <p>
+                                <div className={styles.detailItem} style={{ alignItems: "flex-start" }}>
+                                    <FaUserFriends className={styles.icon} />
+                                    <span className={styles.detailLabel}>Participantes:</span>
+                                    <span className={styles.detailValue}>
                                         {partida.participants.length} / {partida.playerLimit}
-                                    </p>
-                                    <ul className="list-disc pl-5 mt-1">
-                                        {partida.participants.map((participant) => (
-                                            <li key={participant._id}>{participant.name}</li>
-                                        ))}
-                                    </ul>
+                                        <div className={styles.chipList}>
+                                            {partida.participants.map((participant) => (
+                                                <span key={participant._id} className={styles.chip}>
+                                                    {participant.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </span>
                                 </div>
                             </div>
 
@@ -351,7 +377,7 @@ export default function PartidaPage() {
                                         ${highlightedInputs ? styles.highlighted : ""}
                                         ${fadeInputs ? styles.fadeout : ""}
                                       `}
-                                      
+
                                     min="0"
                                     max="59"
                                 />
@@ -373,7 +399,7 @@ export default function PartidaPage() {
                                 <input
                                     type="number"
                                     value={
-                                        scores.find((s) => s.player === participant._id)?.score || 0
+                                        scores.find((s) => s.player === participant._id)?.score ?? ""
                                     }
                                     onChange={(e) => {
                                         const newScores = [...scores];
@@ -396,7 +422,7 @@ export default function PartidaPage() {
                                         ${highlightedInputs ? styles.highlighted : ""}
                                         ${fadeInputs ? styles.fadeout : ""}
                                       `}
-                                      
+
                                 />
                             </div>
                         ))}
