@@ -243,95 +243,90 @@ export default function PartidaPage() {
                 </div>
             )}
             <div className={styles.container}>
-                <div className={styles.card}>
-                    {/* HERO BANNER */}
-                    <div className={styles.heroBanner} style={{
-                        backgroundImage: partida.gameDetails?.image ? `url('${partida.gameDetails.image}')` : undefined,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                    }}>
-                        <div className={styles.heroOverlay}>
-                            <div className={styles.heroContent}>
+                {/* HERO BANNER con detalles */}
+                <div
+                    className={styles.heroBanner}
+                    style={{
+                        backgroundImage: partida.gameDetails?.image
+                            ? `url('${partida.gameDetails.image}')`
+                            : undefined,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                        minHeight: "220px",
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "flex-end"
+                    }}
+                >
+                    <div className={styles.heroOverlay} style={{ width: "100%" }}>
+                        <div
+                            className={styles.heroContent}
+                            style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "flex-end",
+                                width: "100%"
+                            }}
+                        >
+                            <div>
                                 <h1 className={styles.heroTitle}>{partida.title}</h1>
-                                <button
-                                    onClick={handleSave}
-                                    className={styles.heroSaveButton}
+                                <div
+                                    className={styles.detailsGrid}
+                                    style={{ color: "#fff", marginTop: "12px" }}
                                 >
-                                    Guardar resultados
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Info general */}
-                    <div className={styles.cardBody}>
-                        <div className={styles.detailsGrid}>
-                            <div>
-                                <h2 className={styles.sectionTitle}>Detalles de la partida</h2>
-
-                                <div className={styles.detailItem}>
-                                    <FaCalendarAlt className={styles.icon} />
-                                    <span className={styles.detailLabel}>Fecha:</span>
-                                    <span className={styles.detailValue}>{formatDate(partida.date)}</span>
-                                </div>
-                                <div className={styles.detailItem}>
-                                    <FaClock className={styles.icon} />
-                                    <span className={styles.detailLabel}>Horario:</span>
-                                    <span className={styles.detailValue}>
-                                        {partida.startTime} - {partida.endTime}
-                                    </span>
-                                </div>
-                                <div className={styles.detailItem}>
-                                    <FaMapMarkerAlt className={styles.icon} />
-                                    <span className={styles.detailLabel}>Ubicación:</span>
-                                    <span className={styles.detailValue}>{partida.location}</span>
-                                </div>
-                                <div className={styles.detailItem}>
-                                    <FaUser className={styles.icon} />
-                                    <span className={styles.detailLabel}>Límite de jugadores:</span>
-                                    <span className={styles.detailValue}>{partida.playerLimit}</span>
-                                </div>
-                                <div className={styles.detailItem}>
-                                    <FaUsers className={styles.icon} />
-                                    <span className={styles.detailLabel}>Participantes:</span>
-                                    <span className={styles.chipList}>
-                                        {partida.participants.map((participant) => (
-                                            <span key={participant._id} className={styles.chip}>
-                                                {participant.name}
-                                            </span>
-                                        ))}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div>
-                                {partida.gameDetails?.image && (
-                                    <div
-                                        className={styles.imageContainer}
-                                        onClick={() => window.open(partida.gameDetails.image, '_blank')}
-                                        style={{ cursor: 'pointer' }}
-                                        title="Haz clic para ver la imagen completa"
-                                    >
-                                        <Image
-                                            src={partida.gameDetails.image}
-                                            alt={partida.title}
-                                            fill
-                                            style={{ objectFit: 'contain' }}
-                                        />
-                                    </div>
-                                )}
-
-                                {partida.description && (
                                     <div className={styles.detailItem}>
-                                        <p className={styles.detailLabel}>Descripción:</p>
-                                        <p>{partida.description}</p>
+                                        <FaCalendarAlt className={styles.icon} />
+                                        <span className={styles.detailLabel}>Fecha:</span>
+                                        <span className={styles.detailValue}>{formatDate(partida.date)}</span>
                                     </div>
-                                )}
+                                    <div className={styles.detailItem}>
+                                        <FaClock className={styles.icon} />
+                                        <span className={styles.detailLabel}>Horario:</span>
+                                        <span className={styles.detailValue}>
+                                            {partida.startTime} - {partida.endTime}
+                                        </span>
+                                    </div>
+                                    <div className={styles.detailItem}>
+                                        <FaMapMarkerAlt className={styles.icon} />
+                                        <span className={styles.detailLabel}>Ubicación:</span>
+                                        <span className={styles.detailValue}>{partida.location}</span>
+                                    </div>
+                                    <div className={styles.detailItem}>
+                                        <FaUser className={styles.icon} />
+                                        <span className={styles.detailLabel}>Límite:</span>
+                                        <span className={styles.detailValue}>{partida.playerLimit}</span>
+                                    </div>
+                                    <div className={styles.detailItem}>
+                                        <FaUsers className={styles.icon} />
+                                        <span className={styles.detailLabel}>Participantes:</span>
+                                        <span className={styles.chipList}>
+                                            {partida.participants.map((participant) => (
+                                                <span key={participant._id} className={styles.chip}>
+                                                    {participant.name}
+                                                </span>
+                                            ))}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
+                            <button
+                                onClick={handleSave}
+                                className={styles.heroSaveButton}
+                            >
+                                Guardar resultados
+                            </button>
                         </div>
                     </div>
                 </div>
-
+                {/* --- FIN HERO BANNER --- */}
+                {partida.description && (
+                    <div className={styles.card}>
+                        <div className={styles.cardBody}>
+                            <div className={styles.detailLabel} style={{ marginBottom: 4 }}>Descripción:</div>
+                            <div>{partida.description}</div>
+                        </div>
+                    </div>
+                )}
                 {/* Duración real */}
                 <div className={styles.card}>
                     <div className={styles.cardHeader}>
