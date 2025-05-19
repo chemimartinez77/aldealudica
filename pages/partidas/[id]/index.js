@@ -249,31 +249,14 @@ export default function PartidaPage() {
                     style={{
                         backgroundImage: partida.gameDetails?.image
                             ? `url('${partida.gameDetails.image}')`
-                            : undefined,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                        minHeight: "220px",
-                        position: "relative",
-                        display: "flex",
-                        alignItems: "flex-end"
+                            : undefined
                     }}
                 >
-                    <div className={styles.heroOverlay} style={{ width: "100%" }}>
-                        <div
-                            className={styles.heroContent}
-                            style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "flex-end",
-                                width: "100%"
-                            }}
-                        >
+                    <div className={styles.heroOverlay}>
+                        <div className={styles.heroContent}>
                             <div>
                                 <h1 className={styles.heroTitle}>{partida.title}</h1>
-                                <div
-                                    className={styles.detailsGrid}
-                                    style={{ color: "#fff", marginTop: "12px" }}
-                                >
+                                <div className={styles.detailsGrid}>
                                     <div className={styles.detailItem}>
                                         <FaCalendarAlt className={styles.icon} />
                                         <span className={styles.detailLabel}>Fecha:</span>
