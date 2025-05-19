@@ -469,10 +469,9 @@
     border-radius: 18px 18px 0 0;
     overflow: hidden;
     margin-bottom: 10px;
-    background: #bbb;
-    background-size: contain !important;
+    background: #1a2a4a;
+    background-size: cover !important;
     background-position: center !important;
-    background-repeat: no-repeat !important;
     display: flex;
     align-items: flex-end;
     justify-content: flex-start;
@@ -488,11 +487,11 @@
     width: 100%;
     padding: 32px 36px 18px 32px;
     background: linear-gradient(
-        0deg,
-        rgba(10, 36, 99, 0.5) 0%,     /* 50% opaco en la parte superior */
-        rgba(10, 36, 99, 0.3) 50%,    /* 30% opaco a mitad */
-        rgba(10, 36, 99, 0.12) 85%,   /* 12% opaco cerca del final */
-        rgba(10, 36, 99, 0.1) 100%    /* 10% opaco en la parte inferior */
+        to bottom,
+        rgba(10, 36, 99, 0.05) 0%,    /* Casi transparente arriba */
+        rgba(10, 36, 99, 0.2) 30%,    /* Ligeramente visible */
+        rgba(10, 36, 99, 0.5) 70%,    /* Medio opaco */
+        rgba(10, 36, 99, 0.8) 100%    /* Más opaco abajo para texto legible */
     );
     color: #fff;
     border-radius: 0 0 18px 18px;
