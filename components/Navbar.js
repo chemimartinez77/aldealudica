@@ -59,18 +59,18 @@ export default function Navbar() {
           {/* Dropdown */}
           {menuOpen && (
             <div className="absolute left-0 top-full w-48 bg-white text-black rounded-md shadow-lg z-50">
-              <Link href="/noticias" legacyBehavior>
-                <a className="block px-4 py-2 hover:bg-gray-100">Noticias</a>
+              <Link href="/" legacyBehavior>
+                <a className="block px-4 py-2 hover:bg-gray-100">Inicio</a>
               </Link>
               <Link href="/eventos" legacyBehavior>
                 <a className="block px-4 py-2 hover:bg-gray-100">Eventos</a>
               </Link>
-              <Link href="/foro" legacyBehavior>
+              {/* <Link href="/foro" legacyBehavior>
                 <a className="block px-4 py-2 hover:bg-gray-100">Foro</a>
               </Link>
               <Link href="/compra-venta" legacyBehavior>
                 <a className="block px-4 py-2 hover:bg-gray-100">Compra-Venta</a>
-              </Link>
+              </Link> */}
             </div>
           )}
         </div>

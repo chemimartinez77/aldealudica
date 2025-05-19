@@ -250,14 +250,63 @@ export default function PartidaPage() {
                         backgroundImage: partida.gameDetails?.image
                             ? `url('${partida.gameDetails.image}')`
                             : undefined,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                        minHeight: "220px",
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "flex-end"
                     }}
                 >
-                    <div className={styles.heroOverlay}>
-                        <div className={styles.heroContent}>
-                            <div style={{ flex: 1 }}>
+                    <div className={styles.heroOverlay} style={{ width: "100%" }}>
+                        <div
+                            className={styles.heroContent}
+                            style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "flex-end",
+                                width: "100%"
+                            }}
+                        >
+                            <div>
                                 <h1 className={styles.heroTitle}>{partida.title}</h1>
-                                <div className={styles.detailsGrid}>
-                                    {/* ... detalles ... */}
+                                <div
+                                    className={styles.detailsGrid}
+                                    style={{ color: "#fff", marginTop: "12px" }}
+                                >
+                                    <div className={styles.detailItem}>
+                                        <FaCalendarAlt className={styles.icon} />
+                                        <span className={styles.detailLabel}>Fecha:</span>
+                                        <span className={styles.detailValue}>{formatDate(partida.date)}</span>
+                                    </div>
+                                    <div className={styles.detailItem}>
+                                        <FaClock className={styles.icon} />
+                                        <span className={styles.detailLabel}>Horario:</span>
+                                        <span className={styles.detailValue}>
+                                            {partida.startTime} - {partida.endTime}
+                                        </span>
+                                    </div>
+                                    <div className={styles.detailItem}>
+                                        <FaMapMarkerAlt className={styles.icon} />
+                                        <span className={styles.detailLabel}>Ubicación:</span>
+                                        <span className={styles.detailValue}>{partida.location}</span>
+                                    </div>
+                                    <div className={styles.detailItem}>
+                                        <FaUser className={styles.icon} />
+                                        <span className={styles.detailLabel}>Límite:</span>
+                                        <span className={styles.detailValue}>{partida.playerLimit}</span>
+                                    </div>
+                                    <div className={styles.detailItem}>
+                                        <FaUsers className={styles.icon} />
+                                        <span className={styles.detailLabel}>Participantes:</span>
+                                        <span className={styles.chipList}>
+                                            {partida.participants.map((participant) => (
+                                                <span key={participant._id} className={styles.chip}>
+                                                    {participant.name}
+                                                </span>
+                                            ))}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                             <button
