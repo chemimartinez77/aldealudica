@@ -1,8 +1,37 @@
 import Layout from '../components/Layout';
 import { getSession } from 'next-auth/react';
 import Link from 'next/link';
+import styles from '../styles/PartidaDetails.module.css';
 
 export default function Home({ upcomingGames, lastGames, isLoggedIn }) {
+  const renderPartidaItem = (partida) => (
+    <li key={partida.id} className="flex items-center gap-4 mb-4">
+      {/* Imagen del juego */}
+      {partida.gameDetails?.image && (
+        <img
+          src={partida.gameDetails.image}
+          alt={partida.gameDetails.name || 'Juego'}
+          style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }}
+        />
+      )}
+      <div>
+        <Link href={`/partidas/${partida.id}`}>
+          <span className="font-medium hover:underline cursor-pointer">{partida.title}</span>
+        </Link>
+        {' - '}
+        {new Date(partida.date).toLocaleDateString('es-ES')} ({partida.startTime} - {partida.endTime})
+        {/* Chips de participantes */}
+        <div className={styles.chipList} style={{ marginTop: 4 }}>
+          {partida.participants?.map((p) => (
+            <span key={p._id} className={styles.chip}>
+              {p.name}
+            </span>
+          ))}
+        </div>
+      </div>
+    </li>
+  );
+
   return (
     <Layout>
       <h1 className="text-3xl font-bold">Bienvenido a la Aldea Lúdica</h1>
@@ -14,16 +43,8 @@ export default function Home({ upcomingGames, lastGames, isLoggedIn }) {
           {upcomingGames.length === 0 ? (
             <p>No estás apuntado a ninguna partida, ¿por qué no montas una?</p>
           ) : (
-            <ul className="list-disc pl-6">
-              {upcomingGames.map((partida) => (
-                <li key={partida.id}>
-                  <Link href={`/partidas/${partida.id}`}>
-                    <span className="font-medium hover:underline cursor-pointer">{partida.title}</span>
-                  </Link>
-                  {' - '}
-                  {new Date(partida.date).toLocaleDateString('es-ES')} ({partida.startTime} - {partida.endTime})
-                </li>
-              ))}
+            <ul className="pl-0">
+              {upcomingGames.map(renderPartidaItem)}
             </ul>
           )}
         </section>
@@ -32,16 +53,8 @@ export default function Home({ upcomingGames, lastGames, isLoggedIn }) {
       {isLoggedIn && lastGames.length > 0 && (
         <section className="mt-10">
           <h2 className="text-xl font-semibold mb-2">Tus últimas partidas jugadas</h2>
-          <ul className="list-disc pl-6">
-            {lastGames.map((partida) => (
-              <li key={partida.id}>
-                <Link href={`/partidas/${partida.id}`}>
-                  <span className="font-medium hover:underline cursor-pointer">{partida.title}</span>
-                </Link>
-                {' - '}
-                {new Date(partida.date).toLocaleDateString('es-ES')} ({partida.startTime} - {partida.endTime})
-              </li>
-            ))}
+          <ul className="pl-0">
+            {lastGames.map(renderPartidaItem)}
           </ul>
         </section>
       )}

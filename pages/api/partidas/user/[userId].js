@@ -10,8 +10,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Busca partidas donde el usuario está en participants
+    // Popula gameDetails e info básica de participantes
     const partidas = await Partida.find({ participants: userId })
+      .populate('gameDetails', 'image name')
+      .populate('participants', 'name _id')
       .sort({ date: -1 })
       .lean();
 
