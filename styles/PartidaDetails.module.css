@@ -470,8 +470,9 @@
     overflow: hidden;
     margin-bottom: 10px;
     background: #bbb;
-    background-size: cover !important;
+    background-size: contain !important;
     background-position: center !important;
+    background-repeat: no-repeat !important;
     display: flex;
     align-items: flex-end;
     justify-content: flex-start;
@@ -576,19 +577,6 @@
     background: #174eb7;
 }
 
-@media (max-width: 900px) {
-    .heroTitle {
-        font-size: 1.3rem;
-    }
-    .detailsGrid {
-        grid-template-columns: 1fr;
-        gap: 10px 0;
-    }
-    .heroOverlay {
-        padding: 18px 10px 10px 10px;
-    }
-}
-
 @media (max-width: 600px) {
     .heroBanner {
         min-height: 160px;
@@ -599,8 +587,10 @@
         border-radius: 0 0 10px 10px;
         background: linear-gradient(
             0deg,
-            rgba(10, 36, 99, 0.92) 90%,
-            rgba(10, 36, 99, 0.18) 100%
+            rgba(10, 36, 99, 0.5) 0%,     /* 50% opaco en la parte superior */
+            rgba(10, 36, 99, 0.3) 50%,    /* 30% opaco a mitad */
+            rgba(10, 36, 99, 0.12) 85%,   /* 12% opaco cerca del final */
+            rgba(10, 36, 99, 0.1) 100%    /* 10% opaco en la parte inferior */
         );
     }
     .heroContent {
