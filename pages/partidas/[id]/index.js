@@ -247,9 +247,9 @@ export default function PartidaPage() {
                 <div
                     className={styles.heroBanner}
                     style={{
-                        backgroundImage: partida.gameDetails?.image
+                        "--bg-image": partida.gameDetails?.image
                             ? `url('${partida.gameDetails.image}')`
-                            : undefined
+                            : "none"
                     }}
                 >
                     <div className={styles.heroOverlay}>
@@ -257,7 +257,7 @@ export default function PartidaPage() {
                             <div>
                                 <h1 className={styles.heroTitle}>{partida.title}</h1>
                                 <div className={styles.detailsGrid}>
-                                    <div className={styles.detailItem}>
+                                    <div className={`${styles.detailItem} ${styles.dateItem}`}>
                                         <FaCalendarAlt className={styles.icon} />
                                         <span className={styles.detailLabel}>Fecha:</span>
                                         <span className={styles.detailValue}>{formatDate(partida.date)}</span>
@@ -298,6 +298,44 @@ export default function PartidaPage() {
                             >
                                 Guardar resultados
                             </button>
+                        </div>
+                    </div>
+                </div>
+                {/* Detalles para móvil - solo visible en pantallas pequeñas */}
+                <div className={styles.mobileDetails}>
+                    <div className={styles.detailsGrid}>
+                        <div className={styles.detailItem}>
+                            <FaCalendarAlt className={styles.icon} />
+                            <span className={styles.detailLabel}>Fecha:</span>
+                            <span className={styles.detailValue}>{formatDate(partida.date)}</span>
+                        </div>
+                        <div className={styles.detailItem}>
+                            <FaClock className={styles.icon} />
+                            <span className={styles.detailLabel}>Horario:</span>
+                            <span className={styles.detailValue}>
+                                {partida.startTime} - {partida.endTime}
+                            </span>
+                        </div>
+                        <div className={styles.detailItem}>
+                            <FaMapMarkerAlt className={styles.icon} />
+                            <span className={styles.detailLabel}>Ubicación:</span>
+                            <span className={styles.detailValue}>{partida.location}</span>
+                        </div>
+                        <div className={styles.detailItem}>
+                            <FaUser className={styles.icon} />
+                            <span className={styles.detailLabel}>Límite:</span>
+                            <span className={styles.detailValue}>{partida.playerLimit}</span>
+                        </div>
+                        <div className={styles.detailItem}>
+                            <FaUsers className={styles.icon} />
+                            <span className={styles.detailLabel}>Participantes:</span>
+                            <span className={styles.chipList}>
+                                {partida.participants.map((participant) => (
+                                    <span key={participant._id} className={styles.chip}>
+                                        {participant.name}
+                                    </span>
+                                ))}
+                            </span>
                         </div>
                     </div>
                 </div>
