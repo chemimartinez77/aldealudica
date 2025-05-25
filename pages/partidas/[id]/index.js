@@ -259,29 +259,24 @@ export default function PartidaPage() {
                                 <div className={styles.detailsGrid}>
                                     <div className={`${styles.detailItem} ${styles.dateItem}`}>
                                         <FaCalendarAlt className={styles.icon} />
-                                        <span className={styles.detailLabel}>Fecha:</span>
                                         <span className={styles.detailValue}>{formatDate(partida.date)}</span>
                                     </div>
                                     <div className={styles.detailItem}>
                                         <FaClock className={styles.icon} />
-                                        <span className={styles.detailLabel}>Horario:</span>
                                         <span className={styles.detailValue}>
                                             {partida.startTime} - {partida.endTime}
                                         </span>
                                     </div>
                                     <div className={styles.detailItem}>
                                         <FaMapMarkerAlt className={styles.icon} />
-                                        <span className={styles.detailLabel}>Ubicación:</span>
                                         <span className={styles.detailValue}>{partida.location}</span>
                                     </div>
                                     <div className={styles.detailItem}>
                                         <FaUser className={styles.icon} />
-                                        <span className={styles.detailLabel}>Límite:</span>
                                         <span className={styles.detailValue}>{partida.playerLimit}</span>
                                     </div>
                                     <div className={styles.detailItem}>
                                         <FaUsers className={styles.icon} />
-                                        <span className={styles.detailLabel}>Participantes:</span>
                                         <span className={styles.chipList}>
                                             {partida.participants.map((participant) => (
                                                 <span key={participant._id} className={styles.chip}>
@@ -306,29 +301,24 @@ export default function PartidaPage() {
                     <div className={styles.detailsGrid}>
                         <div className={styles.detailItem}>
                             <FaCalendarAlt className={styles.icon} />
-                            <span className={styles.detailLabel}>Fecha:</span>
                             <span className={styles.detailValue}>{formatDate(partida.date)}</span>
                         </div>
                         <div className={styles.detailItem}>
                             <FaClock className={styles.icon} />
-                            <span className={styles.detailLabel}>Horario:</span>
                             <span className={styles.detailValue}>
                                 {partida.startTime} - {partida.endTime}
                             </span>
                         </div>
                         <div className={styles.detailItem}>
                             <FaMapMarkerAlt className={styles.icon} />
-                            <span className={styles.detailLabel}>Ubicación:</span>
                             <span className={styles.detailValue}>{partida.location}</span>
                         </div>
                         <div className={styles.detailItem}>
                             <FaUser className={styles.icon} />
-                            <span className={styles.detailLabel}>Límite:</span>
                             <span className={styles.detailValue}>{partida.playerLimit}</span>
                         </div>
                         <div className={styles.detailItem}>
                             <FaUsers className={styles.icon} />
-                            <span className={styles.detailLabel}>Participantes:</span>
                             <span className={styles.chipList}>
                                 {partida.participants.map((participant) => (
                                     <span key={participant._id} className={styles.chip}>
