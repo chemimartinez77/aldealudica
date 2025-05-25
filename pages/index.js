@@ -1,9 +1,58 @@
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { getSession } from 'next-auth/react';
+import { getSession, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import styles from '../styles/PartidaDetails.module.css';
 
-export default function Home({ upcomingGames, lastGames, isLoggedIn }) {
+export default function Home({ initialUpcomingGames, initialLastGames, initialIsLoggedIn }) {
+  const { data: session, status } = useSession();
+  const [upcomingGames, setUpcomingGames] = useState(initialUpcomingGames);
+  const [lastGames, setLastGames] = useState(initialLastGames);
+  const [isLoggedIn, setIsLoggedIn] = useState(initialIsLoggedIn);
+  const [loading, setLoading] = useState(false);
+
+  // Efecto para cargar datos cuando la sesión cambia
+  useEffect(() => {
+    const fetchUserGames = async () => {
+      if (session && session.user) {
+        setLoading(true);
+        try {
+          const userId = session.user.id;
+          const res = await fetch(`/api/partidas/user/${userId}`);
+          const data = await res.json();
+
+          if (data && Array.isArray(data.partidas)) {
+            const now = new Date();
+            const future = [];
+            const past = [];
+            
+            data.partidas.forEach((p) => {
+              if (new Date(p.date) >= now) {
+                future.push(p);
+              } else {
+                past.push(p);
+              }
+            });
+            
+            setUpcomingGames(future.sort((a, b) => new Date(a.date) - new Date(b.date)));
+            setLastGames(past.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10));
+            setIsLoggedIn(true);
+          }
+        } catch (error) {
+          console.error("Error fetching user games:", error);
+        } finally {
+          setLoading(false);
+        }
+      } else if (status === "unauthenticated") {
+        setIsLoggedIn(false);
+        setUpcomingGames([]);
+        setLastGames([]);
+      }
+    };
+
+    fetchUserGames();
+  }, [session, status]);
+
   const renderPartidaItem = (partida) => (
     <li key={partida.id} className="flex items-center gap-4 mb-4">
       {/* Imagen del juego */}
@@ -40,7 +89,9 @@ export default function Home({ upcomingGames, lastGames, isLoggedIn }) {
       {isLoggedIn && (
         <section className="mt-8">
           <h2 className="text-xl font-semibold mb-2">Tus próximas partidas</h2>
-          {upcomingGames.length === 0 ? (
+          {loading ? (
+            <p>Cargando tus partidas...</p>
+          ) : upcomingGames.length === 0 ? (
             <p>No estás apuntado a ninguna partida, ¿por qué no montas una?</p>
           ) : (
             <ul className="pl-0">
@@ -53,9 +104,13 @@ export default function Home({ upcomingGames, lastGames, isLoggedIn }) {
       {isLoggedIn && lastGames.length > 0 && (
         <section className="mt-10">
           <h2 className="text-xl font-semibold mb-2">Tus últimas partidas jugadas</h2>
-          <ul className="pl-0">
-            {lastGames.map(renderPartidaItem)}
-          </ul>
+          {loading ? (
+            <p>Cargando tus partidas anteriores...</p>
+          ) : (
+            <ul className="pl-0">
+              {lastGames.map(renderPartidaItem)}
+            </ul>
+          )}
         </section>
       )}
     </Layout>
@@ -63,14 +118,15 @@ export default function Home({ upcomingGames, lastGames, isLoggedIn }) {
 }
 
 export async function getServerSideProps(context) {
+  // Renombramos las props para indicar que son valores iniciales
   const session = await getSession(context);
 
   if (!session) {
     return {
       props: {
-        isLoggedIn: false,
-        upcomingGames: [],
-        lastGames: [],
+        initialIsLoggedIn: false,
+        initialUpcomingGames: [],
+        initialLastGames: [],
       },
     };
   }
@@ -105,9 +161,9 @@ export async function getServerSideProps(context) {
 
   return {
     props: {
-      isLoggedIn: true,
-      upcomingGames,
-      lastGames,
+      initialIsLoggedIn: true,
+      initialUpcomingGames: upcomingGames,
+      initialLastGames: lastGames,
     },
   };
 }
