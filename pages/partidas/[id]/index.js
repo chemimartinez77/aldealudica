@@ -303,21 +303,150 @@ export default function PartidaPage() {
                     </div>
                 </div>
             
-            {/* Eliminamos el hero banner y la sección de detalles móviles */}
-            
-            {partida.description && (
+                {partida.description && (
+                    <div className={styles.card}>
+                        <div className={styles.cardBody}>
+                            <div className={styles.detailLabel} style={{ marginBottom: 4 }}>Descripción:</div>
+                            <div>{partida.description}</div>
+                        </div>
+                    </div>
+                )}
+                
+                {/* Duración real */}
                 <div className={styles.card}>
+                    <div className={styles.cardHeader}>
+                        <h2 className={styles.cardTitle}>Duración real</h2>
+                    </div>
                     <div className={styles.cardBody}>
-                        <div className={styles.detailLabel} style={{ marginBottom: 4 }}>Descripción:</div>
-                        <div>{partida.description}</div>
+                        <div className={styles.inputGroup}>
+                            <div>
+                                <label className={styles.detailLabel}>Horas</label>
+                                <input
+                                    type="number"
+                                    value={hours}
+                                    onChange={(e) => setHours(e.target.value)}
+                                    className={`
+                                        ${styles.input}
+                                        ${styles.numberInput}
+                                        ${highlightedInputs ? styles.highlighted : ""}
+                                        ${fadeInputs ? styles.fadeout : ""}
+                                      `}
+                                    min="0"
+                                />
+                            </div>
+                            <div>
+                                <label className={styles.detailLabel}>Minutos</label>
+                                <input
+                                    type="number"
+                                    value={minutes}
+                                    onChange={(e) => setMinutes(e.target.value)}
+                                    className={`
+                                        ${styles.input}
+                                        ${styles.numberInput}
+                                        ${highlightedInputs ? styles.highlighted : ""}
+                                        ${fadeInputs ? styles.fadeout : ""}
+                                      `}
+                                    min="0"
+                                    max="59"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
-            )}
-            
-            {/* Resto de secciones (Duración real, Puntuaciones, Imágenes) se mantienen igual */}
-            
-            {/* ... código existente ... */}
-        </div>
+
+                {/* Puntuaciones */}
+                <div className={styles.card}>
+                    <div className={styles.cardHeader}>
+                        <h2 className={styles.cardTitle}>Puntuaciones</h2>
+                    </div>
+                    <div className={styles.cardBody}>
+                        {scores.length === 0 ? (
+                            <p>No hay puntuaciones registradas.</p>
+                        ) : (
+                            <div className={styles.scoresContainer}>
+                                {scores.map((score, index) => (
+                                    <div key={index} className={styles.scoreItem}>
+                                        <div className={styles.playerName}>{score.player.name}</div>
+                                        <input
+                                            type="number"
+                                            value={score.score}
+                                            onChange={(e) => {
+                                                const newScores = [...scores];
+                                                newScores[index].score = e.target.value;
+                                                setScores(newScores);
+                                            }}
+                                            className={`
+                                                ${styles.input}
+                                                ${styles.scoreInput}
+                                                ${highlightedInputs ? styles.highlighted : ""}
+                                                ${fadeInputs ? styles.fadeout : ""}
+                                            `}
+                                            min="0"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Imágenes */}
+                <div className={styles.card}>
+                    <div className={styles.cardHeader}>
+                        <h2 className={styles.cardTitle}>Imágenes</h2>
+                    </div>
+                    <div className={styles.cardBody}>
+                        <div className={styles.imagesGrid}>
+                            {images.filter(img => !img.isDeleted).map((image) => (
+                                <div
+                                    key={image.publicId}
+                                    className={`${styles.imageContainer} ${fadingImageId === image.publicId ? styles.fadingImage : ''}`}
+                                >
+                                    <div className={styles.imageWrapper}>
+                                        <img
+                                            src={image.url}
+                                            alt="Imagen de la partida"
+                                            className={styles.image}
+                                        />
+                                        <div className={styles.imageActions}>
+                                            <a
+                                                href={image.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className={styles.imageActionButton}
+                                            >
+                                                <Eye size={16} />
+                                            </a>
+                                            <button
+                                                onClick={() => handleDeleteImage(image.publicId)}
+                                                className={styles.imageActionButton}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className={styles.uploadContainer}>
+                            <label htmlFor="file-upload" className={styles.uploadButton} disabled={uploading}>
+                                <span className={styles.uploadIcon}>📷</span>
+                                {uploading ? 'Subiendo...' : 'Subir imágenes'}
+                            </label>
+                            <input
+                                id="file-upload"
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                className={styles.hiddenFileInput}
+                                disabled={uploading}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         <ConfirmDialog
             isOpen={showConfirmDialog}
