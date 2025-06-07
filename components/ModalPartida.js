@@ -1,27 +1,17 @@
 // components/ModalPartida.js
-import {
-    AlertDialog,
-    AlertDialogBody,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogContent,
-    AlertDialogOverlay,
-    useDisclosure
-} from "@chakra-ui/react";
-import { useRef } from "react";
-
-import { useState, useEffect } from "react";
-import { FaTrash, FaSearch } from "react-icons/fa";
-import locations from "../data/locations.json"; // ["Aldea Lúdica"]
+import { useDisclosure } from "@chakra-ui/react";
+import { useRef, useState, useEffect } from "react";
 import styles from "../styles/ModalPartida.module.css";
 import SearchResultsModal from "./SearchResultsModal";
 import ImagePreviewModal from "./ImagePreviewModal";
-import { useRouter } from 'next/router'; // Importar useRouter
+import { useRouter } from 'next/router';
 import { toast } from "react-toastify";
-import { Button, HStack } from "@chakra-ui/react";
-import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
 import { IconButton } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
+import PartidaForm from "./PartidaForm";
+import ReadOnlyInfo from "./ReadOnlyInfo";
+import ModalActions from "./ModalActions";
+import DeleteAlertDialog from "./DeleteAlertDialog";
 
 
 export default function ModalPartida({
@@ -384,39 +374,6 @@ export default function ModalPartida({
         return `${yyyy}-${mm}-${dd}`;
     }
 
-    // Render de info en solo lectura (para view/join)
-    function renderReadOnlyInfo() {
-        return (
-            <div className={styles["read-only-info"]}>
-                {selectedGameDetails?.image && (
-                    <img
-                        src={selectedGameDetails.image}
-                        alt={selectedGameDetails.name}
-                        onClick={() => setShowImagePreview(true)}
-                    />
-                )}
-                <p>
-                    <strong>Título:</strong> {title}
-                </p>
-                <p>
-                    <strong>Descripción:</strong> {description}
-                </p>
-                <p>
-                    <strong>Fecha:</strong> {partida?.date}
-                </p>
-                <p>
-                    <strong>Horario:</strong> {partida?.startTime} –{" "}
-                    {partida?.endTime}
-                </p>
-                <p>
-                    <strong>Límite de jugadores:</strong> {playerLimit}
-                </p>
-                <p>
-                    <strong>Ubicación:</strong> {location}
-                </p>
-            </div>
-        );
-    }
 
     const isFormMode = mode === "create" || mode === "edit";
     const isReadOnlyMode = mode === "view" || mode === "join";
@@ -493,256 +450,61 @@ export default function ModalPartida({
 
                     {/* FORM (create/edit) */}
                     {isFormMode && (
-                        <form>
-                            <div
-                                className={`${styles["form-group"]} ${styles["col-span-2"]}`}
-                            >
-                                <label>Elige un juego (opcional)</label>
-                                <div className={styles["search-input-wrapper"]}>
-                                    <div
-                                        className={styles["search-input-container"]}
-                                    >
-                                        <input
-                                            type="text"
-                                            placeholder="Escribe el nombre del juego"
-                                            value={gameSearch}
-                                            onChange={(e) =>
-                                                setGameSearch(e.target.value)
-                                            }
-                                            disabled={isFull}
-                                            className={styles["search-input"]}
-                                        />
-                                        <FaSearch
-                                            className={styles["search-icon"]}
-                                            onClick={() =>
-                                                !isFull && handleSearchClick()
-                                            }
-                                        />
-                                    </div>
-
-                                    {selectedGameDetails?.image && (
-                                        <img
-                                            src={selectedGameDetails.image}
-                                            alt={selectedGameDetails.name}
-                                            className={
-                                                styles["selected-game-cover"]
-                                            }
-                                            onClick={() =>
-                                                setShowImagePreview(true)
-                                            }
-                                        />
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className={styles["form-group"]}>
-                                <label>Título de la partida</label>
-                                <input
-                                    type="text"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    disabled={isFull}
-                                />
-                            </div>
-
-                            <div className={styles["form-group"]}>
-                                <label>Descripción de la partida</label>
-                                <textarea
-                                    rows={4}
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    disabled={isFull}
-                                />
-                            </div>
-
-                            <div className={styles["form-group"]}>
-                                <label>Hora de inicio</label>
-                                <div style={{ display: "flex", gap: "0.2rem" }}>
-                                    <select
-                                        value={startHour}
-                                        onChange={(e) =>
-                                            setStartHour(e.target.value)
-                                        }
-                                        disabled={isFull}
-                                    >
-                                        {Array.from({ length: 24 }).map((_, i) => {
-                                            const val = String(i).padStart(2, "0");
-                                            return (
-                                                <option key={val} value={val}>
-                                                    {val}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                    :
-                                    <select
-                                        value={startMinute}
-                                        onChange={(e) =>
-                                            setStartMinute(e.target.value)
-                                        }
-                                        disabled={isFull}
-                                    >
-                                        {["00", "15", "30", "45"].map((m) => (
-                                            <option key={m} value={m}>
-                                                {m}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className={styles["form-group"]}>
-                                <label>Hora de fin</label>
-                                <div style={{ display: "flex", gap: "0.2rem" }}>
-                                    <select
-                                        value={endHour}
-                                        onChange={(e) => setEndHour(e.target.value)}
-                                        disabled={isFull}
-                                    >
-                                        {Array.from({ length: 24 }).map((_, i) => {
-                                            const val = String(i).padStart(2, "0");
-                                            return (
-                                                <option key={val} value={val}>
-                                                    {val}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                    :
-                                    <select
-                                        value={endMinute}
-                                        onChange={(e) =>
-                                            setEndMinute(e.target.value)
-                                        }
-                                        disabled={isFull}
-                                    >
-                                        {["00", "15", "30", "45"].map((m) => (
-                                            <option key={m} value={m}>
-                                                {m}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className={styles["form-group"]}>
-                                <label>Límite de jugadores</label>
-                                <input
-                                    type="number"
-                                    min="2"
-                                    max="50"
-                                    value={playerLimit}
-                                    onChange={(e) => setPlayerLimit(e.target.value)}
-                                    disabled={isFull}
-                                />
-                            </div>
-
-                            <div className={styles["form-group"]}>
-                                <label>&nbsp;</label>
-                                {isCreator && (
-                                    <div className={styles["form-group"]}>
-                                        <label>&nbsp;</label>
-                                        <div>
-                                            <input
-                                                type="checkbox"
-                                                id="creatorParticipates"
-                                                checked={creatorParticipates}
-                                                onChange={(e) => setCreatorParticipates(e.target.checked)}
-                                                disabled={isFull}
-                                            />
-                                            <label htmlFor="creatorParticipates">
-                                                Participaré en la partida
-                                            </label>
-                                        </div>
-                                    </div>
-                                )}
-
-                            </div>
-
-
-                            <div className={styles["form-group"]}>
-                                <label>Dónde será la partida</label>
-                                <select
-                                    value={location}
-                                    onChange={(e) => setLocation(e.target.value)}
-                                    disabled={isFull}
-                                >
-                                    {locations.map((loc) => (
-                                        <option key={loc} value={loc}>
-                                            {loc}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </form>
+                        <PartidaForm
+                            gameSearch={gameSearch}
+                            setGameSearch={setGameSearch}
+                            handleSearchClick={handleSearchClick}
+                            selectedGameDetails={selectedGameDetails}
+                            setShowImagePreview={setShowImagePreview}
+                            title={title}
+                            setTitle={setTitle}
+                            description={description}
+                            setDescription={setDescription}
+                            startHour={startHour}
+                            setStartHour={setStartHour}
+                            startMinute={startMinute}
+                            setStartMinute={setStartMinute}
+                            endHour={endHour}
+                            setEndHour={setEndHour}
+                            endMinute={endMinute}
+                            setEndMinute={setEndMinute}
+                            playerLimit={playerLimit}
+                            setPlayerLimit={setPlayerLimit}
+                            isCreator={isCreator}
+                            creatorParticipates={creatorParticipates}
+                            setCreatorParticipates={setCreatorParticipates}
+                            location={location}
+                            setLocation={setLocation}
+                            isFull={isFull}
+                        />
                     )}
 
                     {/* Modo solo lectura (view/join) */}
-                    {isReadOnlyMode && renderReadOnlyInfo()}
+                    {isReadOnlyMode && (
+                        <ReadOnlyInfo
+                            title={title}
+                            description={description}
+                            partida={partida}
+                            playerLimit={playerLimit}
+                            location={location}
+                            selectedGameDetails={selectedGameDetails}
+                            setShowImagePreview={setShowImagePreview}
+                        />
+                    )}
 
                     {/* BOTONES */}
-                    <div className={styles["modal-actions"]}>
-                        {/* Botón verde para unirse o cancelar inscripción */}
-                        {(mode === "join" || (mode === "edit" && isAdmin && !isCreator)) &&
-                            isLoggedIn &&
-                            !isFull && (
-                                isParticipant ? (
-                                    <Button
-                                        colorScheme="red"
-                                        onClick={handleJoinPartida}
-                                        rightIcon={<FaThumbsDown />}
-                                        mr={2}
-                                    >
-                                        Ya no quiero jugar
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        colorScheme="green"
-                                        onClick={handleJoinPartida}
-                                        rightIcon={<FaThumbsUp />}
-                                        mr={2}
-                                    >
-                                        ¡Quiero jugar!
-                                    </Button>
-                                )
-                            )}
-
-                        {/* Botón "Cerrar" si view/join, "Cancelar" si create/edit
-                        {mode === "view" || mode === "join" ? (
-                            <Button onClick={onClose} colorScheme="gray" variant="outline">
-                                Cerrar
-                            </Button>
-                        ) : (
-                            <Button onClick={onClose} colorScheme="gray" variant="solid">
-                                Cancelar
-                            </Button>
-                        )} */}
-
-                        {/* Botón "Guardar" => create/edit */}
-                        {(mode === "create" || mode === "edit") && (
-                            <Button onClick={handleSaveClick} colorScheme="blue">
-                                Guardar
-                            </Button>
-                        )}
-
-                        {/* Botón eliminar => solo edit + eres el creador o admin */}
-                        {mode === "edit" && (isCreator || isAdmin) && (
-                            <IconButton
-                                aria-label="Eliminar partida"
-                                icon={<FaTrash />}
-                                onClick={handleDeleteClick}
-                                colorScheme="red"
-                            />
-                        )}
-                        {/* Botón para ir a la página de detalles */}
-                        <Button
-                            onClick={handleGoToDetails}
-                            colorScheme="blue"
-                            mt={4}
-                        >
-                            Ver Detalles de la Partida
-                        </Button>
-                    </div>
+                    <ModalActions
+                        mode={mode}
+                        isAdmin={isAdmin}
+                        isCreator={isCreator}
+                        isLoggedIn={isLoggedIn}
+                        isFull={isFull}
+                        isParticipant={isParticipant}
+                        handleJoinPartida={handleJoinPartida}
+                        handleSaveClick={handleSaveClick}
+                        handleDeleteClick={handleDeleteClick}
+                        handleGoToDetails={handleGoToDetails}
+                    />
                 </div>
 
                 {/* Modal con resultados de búsqueda */}
@@ -796,34 +558,13 @@ export default function ModalPartida({
 
             </div>
             {isAlertOpen && (
-                <AlertDialog
+                <DeleteAlertDialog
                     isOpen={isAlertOpen}
-                    leastDestructiveRef={cancelRef}
-                    onClose={closeAlert}
-                    isCentered
-                    portalProps={{ containerRef: modalRef }} // <-- Aquí le decimos que no use body
-                >
-                    <AlertDialogOverlay>
-                        <AlertDialogContent>
-                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                                Eliminar partida
-                            </AlertDialogHeader>
-
-                            <AlertDialogBody>
-                                ¿Estás seguro de que deseas eliminar la partida?
-                            </AlertDialogBody>
-
-                            <AlertDialogFooter>
-                                <Button ref={cancelRef} onClick={closeAlert}>
-                                    Cancelar
-                                </Button>
-                                <Button colorScheme="red" onClick={handleConfirmDelete} ml={3}>
-                                    Aceptar
-                                </Button>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialogOverlay>
-                </AlertDialog>
+                    cancelRef={cancelRef}
+                    onCancel={closeAlert}
+                    onConfirm={handleConfirmDelete}
+                    modalRef={modalRef}
+                />
             )}
 
 
