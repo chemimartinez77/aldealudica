@@ -41,24 +41,32 @@ export default NextAuth({
     },
     cookies: {
         sessionToken: {
-            name: process.env.NODE_ENV === "production" ? "__Secure-next-auth.session-token" : "next-auth.session-token",
+            name: process.env.NODE_ENV === "production"
+                ? "__Secure-next-auth.session-token"
+                : "next-auth.session-token",
             options: {
                 httpOnly: true,
-                sameSite: "none", // Necesario para HTTPS y cookies seguras
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
                 secure: process.env.NODE_ENV === "production",
                 path: "/",
             },
         },
         csrfToken: {
-            name: process.env.NODE_ENV === "production" ? "__Host-next-auth.csrf-token" : "next-auth.csrf-token",
+            name: process.env.NODE_ENV === "production"
+                ? "__Host-next-auth.csrf-token"
+                : "next-auth.csrf-token",
             options: {
                 httpOnly: true,
-                sameSite: "none",
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
                 secure: process.env.NODE_ENV === "production",
                 path: "/",
             },
         },
     },
+    pages: {
+        signIn: "/login",
+    },
+    debug: true,
     callbacks: {
         async signIn({ user, account }) {
             if (account.provider === "google") {
