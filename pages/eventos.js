@@ -120,7 +120,6 @@ export default function Eventos() {
                         )
                     );
                 }
-                setModalOpen(false);
             })
             .catch((err) => {
                 console.error("Error guardando partida:", err);
