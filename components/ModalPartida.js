@@ -22,7 +22,10 @@ import { Button, HStack } from "@chakra-ui/react";
 import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
 import { IconButton } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
-
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { FaWhatsapp } from "react-icons/fa";
+import { Icon } from "@chakra-ui/react";
 
 export default function ModalPartida({
     mode, // "create", "edit", "view", "join"
@@ -66,6 +69,7 @@ export default function ModalPartida({
 
     // Lista de participantes
     const [participants, setParticipants] = useState([]);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     // Popover para confirmar borrar partida
     const {
@@ -364,6 +368,7 @@ export default function ModalPartida({
         };
 
         onSave(newPartida);
+        setShowSuccessModal(true);
     }
 
     function handleDeleteClick() {
@@ -421,6 +426,40 @@ export default function ModalPartida({
     const isFormMode = mode === "create" || mode === "edit";
     const isReadOnlyMode = mode === "view" || mode === "join";
 
+    let start = null, end = null, dateStr = "", startTime = "", endTime = "";
+
+    try {
+        start = partida && partida.date && partida.startTime
+            ? new Date(`${partida.date}T${partida.startTime}`)
+            : null;
+        end = partida && partida.date && partida.endTime
+            ? new Date(`${partida.date}T${partida.endTime}`)
+            : null;
+        dateStr = start
+            ? format(start, "dd 'de' MMMM 'de' yyyy", { locale: es })
+            : "";
+        startTime = start
+            ? format(start, "HH:mm", { locale: es })
+            : partida?.startTime || "";
+        endTime = end
+            ? format(end, "HH:mm", { locale: es })
+            : partida?.endTime || "";
+    } catch (err) {}
+
+    const id = partida?.id || partida?._id || "";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+    const partidaLink = `${baseUrl}/eventos?id=${id}`;
+
+    const message =
+        `¡Hola! ¿Te unes a la partida?%0A` +
+        `Nombre: ${encodeURIComponent(title.split(" - ")[0])}%0A` +
+        `Fecha: ${encodeURIComponent(dateStr)}%0A` +
+        `Hora: ${encodeURIComponent(`${startTime}–${endTime}`)}%0A` +
+        `Lugar: ${encodeURIComponent(location || "No especificado")}%0A` +
+        `+info: ${encodeURIComponent(partidaLink)}`;
+
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${message}`;
+
     return (
         <div className={styles["modal-overlay"]}>
             <div ref={modalRef} className={styles["modal-content"]}>
@@ -470,6 +509,20 @@ export default function ModalPartida({
                 <div className={styles["modal-body"]}>
                     {/* PARTICIPANTES */}
                     <div className={styles["form-group"]}>
+                        {(mode !== "create") && (
+                            <span>
+                                <a
+                                    href={whatsappUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title="Compartir por WhatsApp"
+                                    style={{ marginRight: "8px" }}
+                                >
+                                    <Icon as={FaWhatsapp} color="green.500" boxSize={5} />
+                                </a>
+                                Compartir por WhatsApp
+                            </span>
+                        )}
                         <p>
                             Participantes: {participants.length} / {playerLimit}
                         </p>
@@ -734,6 +787,7 @@ export default function ModalPartida({
                                 colorScheme="red"
                             />
                         )}
+
                         {/* Botón para ir a la página de detalles */}
                         <Button
                             onClick={handleGoToDetails}
@@ -825,6 +879,57 @@ export default function ModalPartida({
                     </AlertDialogOverlay>
                 </AlertDialog>
             )}
+            {showSuccessModal && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        background: "rgba(0,0,0,0.4)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        zIndex: 99999
+                    }}
+                >
+                    <div
+                        style={{
+                            background: "#fff",
+                            padding: 32,
+                            borderRadius: 12,
+                            minWidth: 320,
+                            textAlign: "center",
+                            boxShadow: "0 6px 32px #0002"
+                        }}
+                    >
+                        <h2 style={{ marginBottom: 16, color: "#2563eb", fontSize: 22 }}>
+                            Partida creada correctamente
+                        </h2>
+                        <div style={{ marginBottom: 20 }}>
+                            <p>
+                                Para compartirla por WhatsApp haz click en el icono
+                            </p>
+                            <a
+                                href={whatsappUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Compartir por WhatsApp"
+                                style={{ display: "inline-block", marginTop: 16 }}
+                            >
+                                <Icon as={FaWhatsapp} color="green.500" boxSize={12} />
+                            </a>
+                        </div>
+                        <Button
+                            colorScheme="blue"
+                            onClick={() => {
+                                setShowSuccessModal(false);
+                                onClose();
+                            }}
+                            mt={3}
+                        >
+                            Cerrar
+                        </Button>
+                    </div>
+                </div>
+            )}
+
 
 
         </div>
