@@ -27,6 +27,7 @@ import ImagePreviewModal from "./ImagePreviewModal";
 // New child components
 import ModalPartidaForm from "./ModalPartidaForm";
 import ModalPartidaReadOnly from "./ModalPartidaReadOnly";
+import ScoresCard from "./ScoresCard";
 
 export default function ModalPartida({
   mode,             // "create" | "edit" | "view" | "join"
@@ -394,6 +395,16 @@ export default function ModalPartida({
               })}
             </ul>
           </div>
+
+          {mode !== "create" && (
+            <ScoresCard
+                partidaId={id}
+                participants={participants}
+                currentUserId={currentUserId}
+                isEditable={isLoggedIn && (isAdmin || isCreator || isParticipant)}
+                isAdmin={!!isAdmin}
+            />
+        )}
 
           {/* Form (create/edit) */}
           {isFormMode && (
