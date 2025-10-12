@@ -6,10 +6,6 @@ import styles from '../styles/PartidaDetails.module.css';
 
 export default function Home({ initialUpcomingGames, initialLastGames, initialIsLoggedIn }) {
   const { data: session, status } = useSession();
-console.log("🔍 session:", session);
-console.log("📡 Fetching:", `/api/partidas/user/${session?.user?.id}`);
-console.log("status:", status);
-console.log("data recibida:", data);
 
   const [upcomingGames, setUpcomingGames] = useState(initialUpcomingGames);
   const [lastGames, setLastGames] = useState(initialLastGames);
@@ -24,8 +20,15 @@ console.log("data recibida:", data);
         setLoading(true);
         try {
         const userId = session.user.id;
-        const res = await fetch(`/api/partidas/user/${userId}`);
+        console.log("🔍 session:", session);
+        console.log("📡 Fetching:", `/api/partidas/user/${userId}`);
+        console.log("status:", status);
+
+        const res = await fetch(`/api/partidas/user/${userId}`, {
+            credentials: "include", // 👈 importante
+        });
         const data = await res.json();
+        console.log("data recibida:", data); // 👈 aquí sí existe "data"
 
         if (data && Array.isArray(data.partidas)) {
             const now = new Date();

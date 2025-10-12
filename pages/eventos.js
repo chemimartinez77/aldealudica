@@ -95,36 +95,35 @@ export default function Eventos() {
     };
 
     const handleSavePartida = (newPartida) => {
-        const method = newPartida.id ? "PUT" : "POST";
-        const payload = { ...newPartida };
-        if (!newPartida.id) {
-            delete payload.id;
+    const method = newPartida.id ? "PUT" : "POST";
+    const payload = { ...newPartida };
+    if (!newPartida.id) delete payload.id;
+
+    return fetch("/api/partidas", {
+        method,
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    })
+        .then((res) => res.json())
+        .then((saved) => {
+        const updatedPartida = saved.partida;
+
+        if (method === "POST") {
+            setPartidas((prev) => [...prev, updatedPartida]);
+        } else {
+            setPartidas((prev) =>
+            prev.map((p) => (p.id === updatedPartida.id ? updatedPartida : p))
+            );
         }
 
-        fetch("/api/partidas", {
-            method,
-            credentials: 'include', // Añadir esta línea
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
+        return updatedPartida; // 👈 devolvemos la partida creada
         })
-            .then((res) => res.json())
-            .then((saved) => {
-                const updatedPartida = saved.partida;
-
-                if (method === "POST") {
-                    setPartidas((prev) => [...prev, updatedPartida]);
-                } else {
-                    setPartidas((prev) =>
-                        prev.map((p) =>
-                            p.id === updatedPartida.id ? updatedPartida : p
-                        )
-                    );
-                }
-            })
-            .catch((err) => {
-                console.error("Error guardando partida:", err);
-                alert("No se pudo guardar la partida. Inténtalo de nuevo.");
-            });
+        .catch((err) => {
+        console.error("Error guardando partida:", err);
+        alert("No se pudo guardar la partida. Inténtalo de nuevo.");
+        throw err;
+        });
     };
 
     function handleDeletePartida(id) {

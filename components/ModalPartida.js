@@ -71,6 +71,9 @@ export default function ModalPartida({
     const [participants, setParticipants] = useState([]);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+    // Partida recién creada (para mostrar en la modal de éxito)
+    const [createdGame, setCreatedGame] = useState(null);
+
     // Popover para confirmar borrar partida
     const {
         isOpen: isAlertOpen,
@@ -294,7 +297,7 @@ export default function ModalPartida({
     }
 
     // Guardar / Eliminar
-    function handleSaveClick() {
+    async function handleSaveClick() {
         const errors = [];
         if (!title) errors.push("Título");
 
@@ -367,8 +370,16 @@ export default function ModalPartida({
             participants: cleanParticipants,
         };
 
-        onSave(newPartida);
-        setShowSuccessModal(true);
+        try {
+            const savedPartida = await onSave(newPartida); // 👈 esperamos la respuesta
+            if (savedPartida) {
+            setCreatedGame(savedPartida); // 👈 guarda la partida creada en estado
+            setShowSuccessModal(true); // 👈 ahora sí mostramos la modal
+            }
+        } catch (err) {
+            console.error("Error al guardar partida:", err);
+            alert("No se pudo guardar la partida.");
+        }
     }
 
     function handleDeleteClick() {
@@ -446,19 +457,48 @@ export default function ModalPartida({
             : partida?.endTime || "";
     } catch (err) {}
 
-    const id = partida?.id || partida?._id || "";
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+    // Versión antigua, no funciona bien el enlace de compartir
+    // const id = partida?.id || partida?._id || "";
+    // const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+    // const partidaLink = `${baseUrl}/eventos?id=${id}`;
+
+    // const message =
+    //     `¡Hola! ¿Te unes a la partida?%0A` +
+    //     `Nombre: ${encodeURIComponent(title.split(" - ")[0])}%0A` +
+    //     `Fecha: ${encodeURIComponent(dateStr)}%0A` +
+    //     `Hora: ${encodeURIComponent(`${startTime}–${endTime}`)}%0A` +
+    //     `Lugar: ${encodeURIComponent(location || "No especificado")}%0A` +
+    //     `+info: ${encodeURIComponent(partidaLink)}`;
+
+    // const whatsappUrl = `https://api.whatsapp.com/send?text=${message}`;
+
+    const partidaParaCompartir = mode === "create" ? createdGame : partida;
+
+    const id = partidaParaCompartir?.id || partidaParaCompartir?._id || "";
+    const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (typeof window !== "undefined" ? window.location.origin : "");
     const partidaLink = `${baseUrl}/eventos?id=${id}`;
 
-    const message =
-        `¡Hola! ¿Te unes a la partida?%0A` +
-        `Nombre: ${encodeURIComponent(title.split(" - ")[0])}%0A` +
-        `Fecha: ${encodeURIComponent(dateStr)}%0A` +
-        `Hora: ${encodeURIComponent(`${startTime}–${endTime}`)}%0A` +
-        `Lugar: ${encodeURIComponent(location || "No especificado")}%0A` +
-        `+info: ${encodeURIComponent(partidaLink)}`;
+    const message = partidaParaCompartir
+    ? `¡Hola! ¿Te unes a la partida?%0A` +
+        `Juego: *${encodeURIComponent(partidaParaCompartir.title.split(" - ")[0])}*%0A` +
+        `Fecha: *${encodeURIComponent(
+        format(new Date(partidaParaCompartir.date), "dd 'de' MMMM 'de' yyyy", {
+            locale: es,
+        })
+        )}*%0A` +
+        `Hora: *${encodeURIComponent(
+        `${partidaParaCompartir.startTime}–${partidaParaCompartir.endTime}`
+        )}*%0A` +
+        `Lugar: *${encodeURIComponent(
+        partidaParaCompartir.location || "No especificado"
+        )}*%0A` +
+        `*Apúntate!* -> ${encodeURIComponent(partidaLink)}`
+    : "Detalles aún no disponibles.";
 
     const whatsappUrl = `https://api.whatsapp.com/send?text=${message}`;
+
 
     return (
         <div className={styles["modal-overlay"]}>
@@ -509,7 +549,7 @@ export default function ModalPartida({
                 <div className={styles["modal-body"]}>
                     {/* PARTICIPANTES */}
                     <div className={styles["form-group"]}>
-                        {(mode !== "create") && (
+                        {(mode !== "create" || createdGame) && (
                             <span>
                                 <a
                                     href={whatsappUrl}
