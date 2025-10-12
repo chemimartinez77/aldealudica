@@ -6,52 +6,53 @@ import styles from '../styles/PartidaDetails.module.css';
 
 export default function Home({ initialUpcomingGames, initialLastGames, initialIsLoggedIn }) {
   const { data: session, status } = useSession();
+console.log("🔍 session:", session);
+console.log("📡 Fetching:", `/api/partidas/user/${session?.user?.id}`);
+console.log("status:", status);
+console.log("data recibida:", data);
+
   const [upcomingGames, setUpcomingGames] = useState(initialUpcomingGames);
   const [lastGames, setLastGames] = useState(initialLastGames);
   const [isLoggedIn, setIsLoggedIn] = useState(initialIsLoggedIn);
   const [loading, setLoading] = useState(false);
 
   // Efecto para cargar datos cuando la sesión cambia
-  useEffect(() => {
+    useEffect(() => {
     const fetchUserGames = async () => {
-      if (session && session.user) {
+        if (status !== "authenticated") return; // 👈 evita llamadas prematuras
+
         setLoading(true);
         try {
-          const userId = session.user.id;
-          const res = await fetch(`/api/partidas/user/${userId}`);
-          const data = await res.json();
+        const userId = session.user.id;
+        const res = await fetch(`/api/partidas/user/${userId}`);
+        const data = await res.json();
 
-          if (data && Array.isArray(data.partidas)) {
+        if (data && Array.isArray(data.partidas)) {
             const now = new Date();
             const future = [];
             const past = [];
-            
+
             data.partidas.forEach((p) => {
-              if (new Date(p.date) >= now) {
+            if (new Date(p.date) >= now) {
                 future.push(p);
-              } else {
+            } else {
                 past.push(p);
-              }
+            }
             });
-            
+
             setUpcomingGames(future.sort((a, b) => new Date(a.date) - new Date(b.date)));
             setLastGames(past.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10));
             setIsLoggedIn(true);
-          }
-        } catch (error) {
-          console.error("Error fetching user games:", error);
-        } finally {
-          setLoading(false);
         }
-      } else if (status === "unauthenticated") {
-        setIsLoggedIn(false);
-        setUpcomingGames([]);
-        setLastGames([]);
-      }
+        } catch (error) {
+        console.error("Error fetching user games:", error);
+        } finally {
+        setLoading(false);
+        }
     };
 
     fetchUserGames();
-  }, [session, status]);
+    }, [status, session]);
 
   const renderPartidaItem = (partida) => (
     <li key={partida.id} className="flex items-center gap-4 mb-4">
@@ -137,7 +138,7 @@ export async function getServerSideProps(context) {
 
   try {
     // Cambia la URL si tu API está en otro dominio/puerto
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXTAUTH_URL ?? `http://${context.req.headers.host}`;
     const res = await fetch(`${baseUrl}/api/partidas/user/${userId}`);
     const data = await res.json();
 

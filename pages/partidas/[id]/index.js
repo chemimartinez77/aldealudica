@@ -7,7 +7,7 @@ import { Eye, Trash2 } from 'lucide-react'; // <-- Importamos iconos
 import styles from '../../../styles/PartidaDetails.module.css';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import Layout from '../../../components/Layout'; // Importamos el componente Layout
-import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUsers, FaUser, FaDice } from "react-icons/fa";
+import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUsers, FaUser, FaTrophy } from "react-icons/fa";
 
 export default function PartidaPage() {
     const router = useRouter();
@@ -173,14 +173,19 @@ export default function PartidaPage() {
                     minutes: parseInt(minutes) || 0,
                 },
                 scores: scores.map(score => ({
-                    player: score.player,
+                    player: typeof score.player === "object" ? score.player._id : score.player,
                     score: parseInt(score.score) || 0
                 })),
                 winner:
                     scores.length > 0
-                        ? scores.reduce((prev, current) =>
-                            (prev.score > current.score) ? prev : current
-                        ).player
+                        ? (
+                            scores.reduce((prev, current) =>
+                                (prev.score > current.score) ? prev : current
+                            ).player?._id ||
+                            scores.reduce((prev, current) =>
+                                (prev.score > current.score) ? prev : current
+                            ).player
+                        )
                         : null,
             };
 
@@ -192,14 +197,23 @@ export default function PartidaPage() {
             });
 
             if (res.ok) {
-                await fetchPartida(); // recarga sin redirigir
+                // 🔥 🔽 BLOQUE NUEVO AQUÍ 🔽
+                const result = await res.json();
+                if (result?.partida) {
+                    setPartida(result.partida);
+                    setScores(result.partida.scores || []);
+                } else {
+                    await fetchPartida();
+                }
+                // 🔥 🔼 FIN BLOQUE NUEVO 🔼
+
                 setHighlightedInputs(true);
                 setFadeInputs(false);
                 setTimeout(() => {
-                    setFadeInputs(true); // lanza animación
+                    setFadeInputs(true);
                 }, 2000);
                 setTimeout(() => {
-                    setHighlightedInputs(false); // limpia
+                    setHighlightedInputs(false);
                     setFadeInputs(false);
                 }, 4000);
                 setToastMessage("✅ Resultados guardados correctamente");
@@ -211,7 +225,6 @@ export default function PartidaPage() {
                 setToastMessage("❌ " + (errorData.error || 'Error al guardar los resultados'));
                 setToastType("error");
                 setTimeout(() => setToastMessage(""), 4000);
-
             }
         } catch (error) {
             setToastMessage("❌ " + 'Error al guardar los resultados: ' + (error.message || 'Error desconocido'));
@@ -355,35 +368,68 @@ export default function PartidaPage() {
                         <h2 className={styles.cardTitle}>Puntuaciones</h2>
                     </div>
                     <div className={styles.cardBody}>
-                        {scores.length === 0 ? (
-                            <p>No hay puntuaciones registradas.</p>
-                        ) : (
-                            <div className={styles.scoresContainer}>
-                                {scores.map((score, index) => (
-                                    <div key={index} className={styles.scoreItem}>
-                                        <div className={styles.playerName}>{score.player.name}</div>
-                                        <input
-                                            type="number"
-                                            value={score.score}
-                                            onChange={(e) => {
-                                                const newScores = [...scores];
-                                                newScores[index].score = e.target.value;
-                                                setScores(newScores);
-                                            }}
-                                            className={`
-                                                ${styles.input}
-                                                ${styles.scoreInput}
-                                                ${highlightedInputs ? styles.highlighted : ""}
-                                                ${fadeInputs ? styles.fadeout : ""}
-                                            `}
-                                            min="0"
-                                        />
-                                    </div>
-                                ))}
+                        <div className={styles.scoresContainer}>
+                        {partida.participants.map((participant) => {
+                            // Buscar si ya existe puntuación
+                            const existingScore = scores.find(
+                            (s) => s.player?._id?.toString() === participant._id?.toString()
+                            );
+
+                            return (
+                            <div key={participant._id} className={styles.scoreItem}>
+                                <div className={styles.playerName}>{participant.name}</div>
+                                <input
+                                type="number"
+                                value={existingScore ? existingScore.score : ""}
+                                placeholder="0"
+                                onChange={(e) => {
+                                    const value = parseInt(e.target.value) || 0;
+                                    setScores((prev) => {
+                                    const idx = prev.findIndex(
+                                        (s) => s.player?._id?.toString() === participant._id?.toString()
+                                    );
+                                    if (idx >= 0) {
+                                        const updated = [...prev];
+                                        updated[idx] = { ...updated[idx], score: value };
+                                        return updated;
+                                    } else {
+                                        return [...prev, { player: participant, score: value }];
+                                    }
+                                    });
+                                }}
+                                className={`
+                                    ${styles.input}
+                                    ${styles.scoreInput}
+                                    ${highlightedInputs ? styles.highlighted : ""}
+                                    ${fadeInputs ? styles.fadeout : ""}
+                                `}
+                                min="0"
+                                />
                             </div>
+                            );
+                        })}
+                        </div>
+
+                        {partida.winner && (
+                        <div className={styles.winnerContainer}>
+                            <div className={styles.winnerLabel}>
+                            <FaTrophy
+                                style={{
+                                color: "#d4af37",
+                                marginRight: "6px",
+                                verticalAlign: "middle",
+                                }}
+                            />
+                            Ganador:
+                            </div>
+                            <div className={styles.winnerName}>
+                            {partida.winner.name || "Jugador desconocido"}
+                            </div>
+                        </div>
                         )}
                     </div>
                 </div>
+
 
                 {/* Imágenes */}
                 <div className={styles.card}>
